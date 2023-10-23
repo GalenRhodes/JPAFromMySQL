@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <!-- # Any leading or trailing spaces are significant. -->
+    <entry key="nothing"/>
+    <!-- # -->
+    <entry key="jdbc.url">jdbc:mysql://%s:%d/%s</entry>
+    <!-- # -->
+    <entry key="mysql.curr.ts.value">CURRENT_TIMESTAMP</entry>
+    <!-- # -->
+    <entry key="hibernate.conf.mapping.entry">&lt;mapping class="%s" /&gt;</entry>
+    <!-- # -->
+    <entry key="newline">&#10;</entry>
+    <entry key="tab.width">4</entry>
+    <entry key="header.date.format">MMMM d, yyyy</entry>
+    <entry key="header.year.format">yyyy</entry>
+    <!-- # -->
+    <entry key="import.basic_set">
+        com.projectgalen.lib.jpa.utils.interfaces.StreamConsumer,
+        com.projectgalen.lib.jpa.utils.interfaces.StreamFunction,
+        org.hibernate.Session,
+        com.projectgalen.lib.jpa.utils.annotations.PGJPA,
+        com.projectgalen.lib.jpa.utils.annotations.EntityCache,
+        com.projectgalen.lib.jpa.utils.base.JpaBase,
+        com.projectgalen.lib.jpa.utils.enums.JpaState,
+        com.projectgalen.lib.jpa.utils.events.*,
+        com.projectgalen.lib.jpa.utils.HibernateUtil,
+        com.projectgalen.lib.utils.annotations.PGCurrentTimestamp,
+        com.projectgalen.lib.utils.annotations.PGDefaultValue,
+        com.projectgalen.lib.utils.concurrency.Locks,
+        com.projectgalen.lib.utils.*,
+        jakarta.persistence.*,
+        java.util.*,
+        org.hibernate.annotations.*,
+        org.jetbrains.annotations.*,
+        java.util.stream.Stream,
+        java.util.stream.Collectors
+    </entry>
+    <!-- # -->
+    <entry key="anno.curr_ts">@PGCurrentTimestamp&#32;</entry>
+    <entry key="anno.column.notnull">@Column(name = "%s")&#32;</entry>
+    <entry key="anno.column.null">@Column(name = "%s", nullable = false)&#32;</entry>
+    <entry key="anno.id">@Id&#32;</entry>
+    <entry key="anno.genval">@GeneratedValue(strategy = GenerationType.IDENTITY)&#32;</entry>
+    <entry key="anno.nullable">@Nullable&#32;</entry>
+    <entry key="anno.notnull">@NotNull&#32;</entry>
+    <entry key="anno.converter">@Convert(converter = %s.class)&#32;</entry>
+    <entry key="anno.default">@PGDefaultValue("%s")&#32;</entry>
+    <!-- # -->
+    <entry key="equals.statement">Objects.equals(get%s(), other.get%&lt;s())</entry>
+    <entry key="equals.join">&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&amp;&amp;&#32;</entry>
+    <entry key="hash.join">,&#32;</entry>
+    <entry key="pkvar.join">,&#32;</entry>
+    <entry key="pkval.join">,&#32;</entry>
+    <entry key="pkfld.join">,&#32;</entry>
+    <!-- # -->
+    <entry key="nothing"/>
+    <entry key="flex.space.regexp">\$\{flex.space}</entry>
+    <!-- # -->
+    <entry key="java.import.statement">import %s;</entry>
+    <entry key="java.package.statement">package %s;&#10;&#10;</entry>
+    <entry key="java.setter.statement">this.%s${flex.space}=${flex.space}%s;</entry>
+    <entry key="java.create.timestamp">Dates.getTimestamp()</entry>
+    <entry key="java.create.date">new Date(System.currentTimeMillis())</entry>
+    <entry key="java.create.time">new Time(System.currentTimeMillis())</entry>
+    <entry key="java.create.cal">Calendar.getInstance()</entry>
+    <entry key="java.create.date.default">new java.util.Date()</entry>
+    <!-- # -->
+</properties>
