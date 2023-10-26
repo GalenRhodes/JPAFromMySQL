@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Main-Class: com.projectgalen.app.JPAFromMySQL
+Main-Class: com.projectgalen.app.jpafrommysql.JPAFromMySQL

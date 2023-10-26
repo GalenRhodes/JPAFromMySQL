@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <!-- # Any leading or trailing spaces are significant. -->
+    <entry key="fetch.foreign_keys">SELECT CONSTRAINT_NAME, TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME, ORDINAL_POSITION, POSITION_IN_UNIQUE_CONSTRAINT
+        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = ? AND REFERENCED_TABLE_SCHEMA = TABLE_SCHEMA
+        ORDER BY TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+    </entry>
+    <!-- # -->
+    <entry key="fetch.indexes">SHOW INDEXES IN `%s`.`%s`</entry>
+    <!-- # -->
+    <entry key="fetch.columns">SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION</entry>
+    <!-- # -->
+    <entry key="fetch.tables">SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? and TABLE_TYPE = 'BASE TABLE'</entry>
+    <!-- # -->
+</properties>
