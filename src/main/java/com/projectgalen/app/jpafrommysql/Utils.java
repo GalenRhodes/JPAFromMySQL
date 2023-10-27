@@ -34,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
 public final class Utils {
@@ -93,6 +94,10 @@ public final class Utils {
     public static @Nullable Long getLong(@NotNull ResultSet rs, @NotNull String column) throws SQLException {
         long value = rs.getLong(column);
         return (rs.wasNull() ? null : value);
+    }
+
+    public static @NotNull Pattern getRegex(@NotNull String rstr) {
+        return ((rstr.startsWith("/") && rstr.endsWith("/")) ? Pattern.compile(rstr.substring(1, rstr.length() - 1)) : Pattern.compile(Pattern.quote(rstr)));
     }
 
     public static Settings loadSettings(String filename) {
