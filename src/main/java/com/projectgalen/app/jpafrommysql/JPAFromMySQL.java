@@ -19,8 +19,10 @@ package com.projectgalen.app.jpafrommysql;
 // ================================================================================================================================
 
 import com.formdev.flatlaf.util.SystemInfo;
-import com.projectgalen.app.jpafrommysql.dbinfo.ForeignKey;
-import com.projectgalen.app.jpafrommysql.dbinfo.Table;
+import com.projectgalen.app.jpafrommysql.components.OmittedForm;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBForeignKey;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBTable;
+import com.projectgalen.app.jpafrommysql.settings.GenerationInfo;
 import com.projectgalen.app.jpafrommysql.settings.ServerInfo;
 import com.projectgalen.app.jpafrommysql.settings.Settings;
 import com.projectgalen.app.jpafrommysql.tree.*;
@@ -63,43 +65,50 @@ public class JPAFromMySQL extends JFrame {
 
     private static JPAFromMySQL app;
 
-    protected          JPanel             contentPane;
-    protected          JButton            buttonGenerate;
-    protected          JButton            saveButton;
-    protected          JButton            savePathLookupButton;
-    protected          JButton            outputPathLookupButton;
-    protected          JButton            reloadInfoButton;
-    protected          JCheckBox          splitEntitiesIntoBaseCheckBox;
-    protected          JCheckBox          saveValuesForLaterCheckBox;
-    protected final    JMenuBar           menuBar;
-    protected          JPasswordField     mySqlPasswordField;
-    protected          JTextField         mySqlHostnameField;
-    protected          JTextField         mySqlPortField;
-    protected          JTextField         mySqlSchemaField;
-    protected          JTextField         mySqlUsernameField;
-    protected          JTextField         projectField;
-    protected          JTextField         authorField;
-    protected          JTextField         organizationField;
-    protected          JTextField         basePackageField;
-    protected          JTextField         baseClassPrefixField;
-    protected          JTextField         baseClassSuffixField;
-    protected          JTextField         subClassPackageField;
-    protected          JTextField         subClassPrefixField;
-    protected          JTextField         subClassSuffixField;
-    protected          JTextField         fkPrefixField;
-    protected          JTextField         fkSuffixField;
-    protected          JTextField         fkToManyFieldPatternField;
-    protected          JTextField         fkToOneFieldPatternField;
-    protected          JTextField         savePathField;
-    protected          JTextField         outputPathField;
-    protected          JTree              tablesTree;
-    protected          JButton            openButton;
-    protected          JTabbedPane        tabbedPane;
-    protected          JButton            newFileButton;
-    protected          JPopupMenu         popupMenu;
-    protected @NotNull Map<String, Table> tableList  = Collections.emptyMap();
-    protected          StringTreeNode     topNode    = DEFAULT_TOP_NODE;
-    protected          boolean            hasChanges = false;
+    protected          JPanel               contentPane;
+    protected          JButton              buttonGenerate;
+    protected          JButton              saveButton;
+    protected          JButton              savePathLookupButton;
+    protected          JButton              outputPathLookupButton;
+    protected          JButton              reloadInfoButton;
+    protected          JCheckBox            splitEntitiesIntoBaseCheckBox;
+    protected          JCheckBox            saveValuesForLaterCheckBox;
+    protected final    JMenuBar             menuBar;
+    protected          JPasswordField       mySqlPasswordField;
+    protected          JTextField           mySqlHostnameField;
+    protected          JTextField           mySqlPortField;
+    protected          JTextField           mySqlSchemaField;
+    protected          JTextField           mySqlUsernameField;
+    protected          JTextField           projectField;
+    protected          JTextField           authorField;
+    protected          JTextField           organizationField;
+    protected          JTextField           basePackageField;
+    protected          JTextField           baseClassPrefixField;
+    protected          JTextField           baseClassSuffixField;
+    protected          JTextField           subClassPackageField;
+    protected          JTextField           subClassPrefixField;
+    protected          JTextField           subClassSuffixField;
+    protected          JTextField           fkPrefixField;
+    protected          JTextField           fkSuffixField;
+    protected          JTextField           fkToManyFieldPatternField;
+    protected          JTextField           fkToOneFieldPatternField;
+    protected          JTextField           savePathField;
+    protected          JTextField           outputPathField;
+    protected          JTree                tablesTree;
+    protected          JButton              openButton;
+    protected          JTabbedPane          tabbedPane;
+    protected          JButton              newFileButton;
+    protected          JLabel               subClassPackageLabel;
+    protected          JLabel               subClassPrefixLabel;
+    protected          JLabel               subClassSuffixLabel;
+    protected          JLabel               basePackageLabel;
+    protected          JLabel               baseClassPrefixLabel;
+    protected          JLabel               baseClassSuffixLabel;
+    protected          OmittedForm          omittedForm;
+    protected          JPopupMenu           popupMenu;
+    protected @NotNull Map<String, DBTable> tableList  = Collections.emptyMap();
+    protected          StringTreeNode       topNode    = DEFAULT_TOP_NODE;
+    protected          boolean              hasChanges = false;
 
     protected Settings settings = new Settings(false);
 
@@ -156,6 +165,14 @@ public class JPAFromMySQL extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
         setMinimumSize(getSize());
+    }
+
+    public void updateGeneratedNamesBasedOnSettings() {
+        GenerationInfo genInfo = settings.getGenerationInfo();
+
+        tableList.values().forEach(table -> {
+            table.setOmitted(genInfo.getOmitted().stream().anyMatch(o -> o.has(table)));
+        });
     }
 
     private void addChangeListeners() {
@@ -339,11 +356,11 @@ public class JPAFromMySQL extends JFrame {
         String     schemaName = si.getSchemaName();
 
         tableList = Objects.requireNonNullElseGet(si.getFromDatabase(suppressErrorDialog, conn -> {
-            Map<String, Table> list = si.getFromPrepStmt(conn, sql.getProperty("fetch.tables"), suppressErrorDialog, stmt -> {
-                Map<String, Table> tables = new TreeMap<>();
+            Map<String, DBTable> list = si.getFromPrepStmt(conn, sql.getProperty("fetch.tables"), suppressErrorDialog, stmt -> {
+                Map<String, DBTable> tables = new TreeMap<>();
                 stmt.setString(1, schemaName);
                 si.forEachRow(stmt, rs -> {
-                    Table table = new Table(rs);
+                    DBTable table = new DBTable(rs);
                     tables.put(table.getTableName(), table);
                 });
                 return tables;
@@ -353,19 +370,19 @@ public class JPAFromMySQL extends JFrame {
 
             si.doWithPrepStmt(conn, sql.getProperty("fetch.columns"), suppressErrorDialog, stmt -> {
                 stmt.setString(1, schemaName);
-                for(Table table : list.values()) {
+                for(DBTable table : list.values()) {
                     stmt.setString(2, table.getTableName());
                     table.addColumns(stmt.executeQuery());
                 }
             });
 
-            for(Table table : list.values()) {
+            for(DBTable table : list.values()) {
                 si.doWithPrepStmt(conn, sql.format("fetch.indexes", schemaName, table.getTableName()), suppressErrorDialog, stmt -> si.forEachRow(stmt, table::addIndexes));
             }
 
             si.doWithPrepStmt(conn, sql.getProperty("fetch.foreign_keys"), suppressErrorDialog, stmt -> {
                 stmt.setString(1, schemaName);
-                si.forEachRow(stmt, rs -> new ForeignKey(list, rs));
+                si.forEachRow(stmt, rs -> new DBForeignKey(list, rs));
             });
 
             return list;

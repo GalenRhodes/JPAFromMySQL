@@ -1,10 +1,10 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql.dbinfo;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: ColumnTreeNode.java
+//    FILENAME: DBServer.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
-//        DATE: October 27, 2023
+//        DATE: October 28, 2023
 //
 // Copyright © 2023 Project Galen. All rights reserved.
 //
@@ -17,22 +17,41 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import com.projectgalen.app.jpafrommysql.dbinfo.DBColumn;
-import org.jetbrains.annotations.NotNull;
+import java.util.Collections;
+import java.util.Map;
 
-import javax.swing.*;
+public class DBServer {
 
-public class ColumnTreeNode extends DatabaseTreeNode<DBColumn> {
-    public ColumnTreeNode(@NotNull DBColumn userObject) {
-        super(userObject, false);
+    protected final String                hostName;
+    protected final int                   port;
+    protected final String                username;
+    protected final String                password;
+    protected       Map<String, DBSchema> schemas = Collections.emptyMap();
+
+    public DBServer(String hostName, int port, String username, String password) {
+        this.hostName = hostName;
+        this.port     = port;
+        this.username = username;
+        this.password = password;
     }
 
-    public @Override @NotNull Icon getIcon() {
-        return (getUserObject().isPrimaryKey() ? pkColumnIcon : columnIcon);
+    public String getHostName() {
+        return hostName;
     }
 
-    public @Override void setUserObject(Object userObject) {
-        if(userObject instanceof DBColumn) super.setUserObject(userObject);
-        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBColumn.class.getName()));
+    public String getPassword() {
+        return password;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public Map<String, DBSchema> getSchemas() {
+        return Collections.unmodifiableMap(schemas);
+    }
+
+    public String getUsername() {
+        return username;
     }
 }

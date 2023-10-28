@@ -20,6 +20,7 @@ package com.projectgalen.app.jpafrommysql.settings;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBTable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -39,6 +40,11 @@ public class TableReference implements Comparable<TableReference> {
     public TableReference(@NotNull String schema, @NotNull String table) {
         this.schema = schema;
         this.table  = table;
+    }
+
+    public TableReference(@NotNull DBTable table) {
+        this.schema = table.getTableSchema();
+        this.table  = table.getTableName();
     }
 
     public @Override int compareTo(@NotNull TableReference o) {
@@ -64,6 +70,10 @@ public class TableReference implements Comparable<TableReference> {
         return Objects.hash(schema, table);
     }
 
+    public boolean matches(@NotNull DBTable table) {
+        return matches(table.getTableSchema(), table.getTableName());
+    }
+
     public boolean matches(@NotNull String schema, @NotNull String table) {
         return (getSchemaRegex().matcher(schema).matches() && getTableRegex().matcher(table).matches());
     }
@@ -78,12 +88,12 @@ public class TableReference implements Comparable<TableReference> {
         this.tableRegex = null;
     }
 
-    protected synchronized Pattern getSchemaRegex() {
+    protected Pattern getSchemaRegex() {
         if(schemaRegex == null) schemaRegex = getRegex(this.schema);
         return schemaRegex;
     }
 
-    protected synchronized Pattern getTableRegex() {
+    protected Pattern getTableRegex() {
         if(tableRegex == null) tableRegex = getRegex(this.table);
         return tableRegex;
     }

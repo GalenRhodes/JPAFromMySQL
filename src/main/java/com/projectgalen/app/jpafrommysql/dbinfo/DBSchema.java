@@ -1,10 +1,10 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql.dbinfo;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: ColumnTreeNode.java
+//    FILENAME: DBSchema.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
-//        DATE: October 27, 2023
+//        DATE: October 28, 2023
 //
 // Copyright © 2023 Project Galen. All rights reserved.
 //
@@ -17,22 +17,30 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import com.projectgalen.app.jpafrommysql.dbinfo.DBColumn;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
+import java.util.Collections;
+import java.util.Map;
 
-public class ColumnTreeNode extends DatabaseTreeNode<DBColumn> {
-    public ColumnTreeNode(@NotNull DBColumn userObject) {
-        super(userObject, false);
+public class DBSchema {
+
+    protected final String schemaName;
+
+    protected @NotNull Map<String, DBTable> tables = Collections.emptyMap();
+
+    public DBSchema(String schemaName) {
+        this.schemaName = schemaName;
     }
 
-    public @Override @NotNull Icon getIcon() {
-        return (getUserObject().isPrimaryKey() ? pkColumnIcon : columnIcon);
+    public String getSchemaName() {
+        return schemaName;
     }
 
-    public @Override void setUserObject(Object userObject) {
-        if(userObject instanceof DBColumn) super.setUserObject(userObject);
-        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBColumn.class.getName()));
+    public @NotNull Map<String, DBTable> getTables() {
+        return Collections.unmodifiableMap(tables);
+    }
+
+    @Override public String toString() {
+        return "%s - [%,d tables]".formatted(schemaName, tables.size());
     }
 }

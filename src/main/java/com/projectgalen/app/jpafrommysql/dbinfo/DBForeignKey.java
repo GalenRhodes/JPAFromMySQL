@@ -2,7 +2,7 @@ package com.projectgalen.app.jpafrommysql.dbinfo;
 
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: ForeignKey.java
+//    FILENAME: DBForeignKey.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
 //        DATE: October 25, 2023
@@ -27,7 +27,7 @@ import java.util.Map;
 import static java.util.Optional.ofNullable;
 
 @SuppressWarnings("unused")
-public class ForeignKey {
+public class DBForeignKey {
 
     private final String         constraintName;
     private final String         tableName;
@@ -36,11 +36,11 @@ public class ForeignKey {
     private final String         referencedColumnName;
     private final long           ordinalPosition;
     private final long           positionInUniqueConstraint;
-    private final Column         column;
-    private final Column         referencedColumn;
+    private final DBColumn       column;
+    private final DBColumn       referencedColumn;
     private final ForeignKeyType type;
 
-    public ForeignKey(@NotNull Map<String, Table> tables, @NotNull ResultSet rs) throws SQLException {
+    public DBForeignKey(@NotNull Map<String, DBTable> tables, @NotNull ResultSet rs) throws SQLException {
         constraintName             = rs.getString("CONSTRAINT_NAME");
         tableName                  = rs.getString("TABLE_NAME");
         columnName                 = rs.getString("COLUMN_NAME");
@@ -49,8 +49,8 @@ public class ForeignKey {
         ordinalPosition            = rs.getLong("ORDINAL_POSITION");
         positionInUniqueConstraint = rs.getLong("POSITION_IN_UNIQUE_CONSTRAINT");
 
-        Column c1 = ofNullable(tables.get(tableName)).map(t -> t.getColumn(columnName)).orElse(null);
-        Column c2 = ofNullable(tables.get(referencedTableName)).map(t -> t.getColumn(referencedColumnName)).orElse(null);
+        DBColumn c1 = ofNullable(tables.get(tableName)).map(t -> t.getColumn(columnName)).orElse(null);
+        DBColumn c2 = ofNullable(tables.get(referencedTableName)).map(t -> t.getColumn(referencedColumnName)).orElse(null);
 
         if((c1 != null) && (c2 != null)) {
             column           = c1;
@@ -82,7 +82,7 @@ public class ForeignKey {
         }
     }
 
-    public Column getColumn() {
+    public DBColumn getColumn() {
         return column;
     }
 
@@ -102,7 +102,7 @@ public class ForeignKey {
         return positionInUniqueConstraint;
     }
 
-    public Column getReferencedColumn() {
+    public DBColumn getReferencedColumn() {
         return referencedColumn;
     }
 

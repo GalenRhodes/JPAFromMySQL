@@ -1,7 +1,7 @@
 package com.projectgalen.app.jpafrommysql.settings;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: FieldReference.java
+//    FILENAME: ColumnReference.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
 //        DATE: October 27, 2023
@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.projectgalen.app.jpafrommysql.Utils;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBColumn;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -29,53 +30,56 @@ import java.util.stream.Stream;
 
 import static com.projectgalen.app.jpafrommysql.Utils.getRegex;
 
+@SuppressWarnings("unused")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class FieldReference implements Comparable<FieldReference> {
+public class ColumnReference implements Comparable<ColumnReference> {
 
-    protected @JsonIgnore                                      List<Pattern> fieldRegex  = null;
+    protected @JsonIgnore                                      List<Pattern> columnRegex = null;
     protected @JsonIgnore                                      Pattern       schemaRegex = null;
     protected @JsonIgnore                                      Pattern       tableRegex  = null;
     protected @JsonProperty(value = "schema", required = true) String        schema;
     protected @JsonProperty(value = "table", required = true)  String        table;
-    protected @JsonProperty("fields")                          Set<String>   fields      = new TreeSet<>();
+    protected @JsonProperty("columns")                         Set<String>   columns     = new TreeSet<>();
 
-    public FieldReference() { }
+    public ColumnReference() { }
 
-    public FieldReference(@NotNull String schema, @NotNull String table, String... fields) {
-        this.fields = new TreeSet<>(List.of(fields));
+    public ColumnReference(@NotNull String schema, @NotNull String table, String... columns) {
+        this.columns = new TreeSet<>(List.of(columns));
     }
 
     public @JsonIgnore void addField(@NotNull String field) {
-        fields.add(field);
+        columns.add(field);
+        columnRegex = null;
     }
 
     public void clearFields() {
-        fields.clear();
+        columns.clear();
+        columnRegex = null;
     }
 
-    public @Override int compareTo(@NotNull FieldReference o) {
+    public @Override int compareTo(@NotNull ColumnReference o) {
         int cc = schema.compareTo(o.schema);
         if(cc != 0) return cc;
         if((cc = table.compareTo(o.table)) != 0) return cc;
-        if((cc = Integer.compare(fields.size(), o.fields.size())) != 0) return cc;
-        List<String> a = new ArrayList<>(fields);
-        List<String> b = new ArrayList<>(o.fields);
+        if((cc = Integer.compare(columns.size(), o.columns.size())) != 0) return cc;
+        List<String> a = new ArrayList<>(columns);
+        List<String> b = new ArrayList<>(o.columns);
         for(int i = 0, j = a.size(); i < j; i++) if((cc = a.get(i).compareTo(b.get(i))) != 0) return cc;
         return 0;
     }
 
     public @JsonIgnore int count() {
-        return fields.size();
+        return columns.size();
     }
 
     public @Override boolean equals(Object o) {
         if(this == o) return true;
-        if(!(o instanceof FieldReference that)) return false;
-        return Objects.equals(schema, that.schema) && Objects.equals(table, that.table) && Objects.equals(fields, that.fields);
+        if(!(o instanceof ColumnReference that)) return false;
+        return Objects.equals(schema, that.schema) && Objects.equals(table, that.table) && Objects.equals(columns, that.columns);
     }
 
-    public Set<String> getFields() {
-        return fields;
+    public Set<String> getColumns() {
+        return columns;
     }
 
     public String getSchema() {
@@ -87,19 +91,25 @@ public class FieldReference implements Comparable<FieldReference> {
     }
 
     public @Override int hashCode() {
-        return Objects.hash(schema, table, fields);
+        return Objects.hash(schema, table, columns);
     }
 
-    public boolean matches(@NotNull String schema, @NotNull String table, @NotNull String field) {
-        return (getSchemaRegex().matcher(schema).matches() && getTableRegex().matcher(table).matches() && getFieldRegex().stream().anyMatch(r -> r.matcher(field).matches()));
+    public boolean matches(@NotNull DBColumn column) {
+        return matches(column.getTable().getTableSchema(), column.getTable().getTableName(), column.getColumnName());
+    }
+
+    public boolean matches(@NotNull String schema, @NotNull String table, @NotNull String column) {
+        return (getSchemaRegex().matcher(schema).matches() && getTableRegex().matcher(table).matches() && getColumnRegex().stream().anyMatch(r -> r.matcher(column).matches()));
     }
 
     public @JsonIgnore void removeField(@NotNull String field) {
-        fields.remove(field);
+        columns.remove(field);
+        columnRegex = null;
     }
 
-    public void setFields(@NotNull Set<String> fields) {
-        this.fields = new TreeSet<>(fields);
+    public void setColumns(@NotNull Set<String> columns) {
+        this.columns = new TreeSet<>(columns);
+        columnRegex  = null;
     }
 
     public void setSchema(String schema) {
@@ -112,24 +122,24 @@ public class FieldReference implements Comparable<FieldReference> {
         this.tableRegex = null;
     }
 
-    public @JsonIgnore @NotNull Stream<FieldInfo> stream() {
-        return fields.stream().map(field -> new FieldInfo(schema, table, field));
+    public @JsonIgnore @NotNull Stream<FullColumnName> stream() {
+        return columns.stream().map(field -> new FullColumnName(schema, table, field));
     }
 
-    protected synchronized List<Pattern> getFieldRegex() {
-        if(fieldRegex == null) fieldRegex = fields.stream().map(Utils::getRegex).toList();
-        return fieldRegex;
+    protected List<Pattern> getColumnRegex() {
+        if(columnRegex == null) columnRegex = columns.stream().map(Utils::getRegex).toList();
+        return columnRegex;
     }
 
-    protected synchronized Pattern getSchemaRegex() {
+    protected Pattern getSchemaRegex() {
         if(schemaRegex == null) schemaRegex = getRegex(this.schema);
         return schemaRegex;
     }
 
-    protected synchronized Pattern getTableRegex() {
+    protected Pattern getTableRegex() {
         if(tableRegex == null) tableRegex = getRegex(this.table);
         return tableRegex;
     }
 
-    public record FieldInfo(@NotNull String schema, @NotNull String table, @NotNull String field) { }
+    public record FullColumnName(@NotNull String schema, @NotNull String table, @NotNull String column) { }
 }

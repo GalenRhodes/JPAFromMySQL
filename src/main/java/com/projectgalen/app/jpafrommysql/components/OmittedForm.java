@@ -1,10 +1,10 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql.components;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: ColumnTreeNode.java
+//    FILENAME: OmittedForm.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
-//        DATE: October 27, 2023
+//        DATE: October 28, 2023
 //
 // Copyright © 2023 Project Galen. All rights reserved.
 //
@@ -17,22 +17,34 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import com.projectgalen.app.jpafrommysql.dbinfo.DBColumn;
+import com.projectgalen.app.jpafrommysql.settings.ColumnReference;
+import com.projectgalen.app.jpafrommysql.settings.OmitInfo;
+import com.projectgalen.app.jpafrommysql.settings.TableReference;
+import com.projectgalen.lib.ui.components.table.PGJTable;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public class ColumnTreeNode extends DatabaseTreeNode<DBColumn> {
-    public ColumnTreeNode(@NotNull DBColumn userObject) {
-        super(userObject, false);
+public class OmittedForm extends JPanel {
+    protected PGJTable<TableReference>  omittedTablesTable;
+    protected JButton                   addOmittedTableButton;
+    protected JButton                   removeOmittedTableButton;
+    protected PGJTable<ColumnReference> omittedFieldsTable;
+    protected JButton                   addOmittedColumnButton;
+    protected JButton                   removeOmittedColumnButton;
+    protected JPanel                    rootComponent;
+
+    public OmittedForm() { }
+
+    public void getData(@NotNull OmitInfo omitInfo) {
+
     }
 
-    public @Override @NotNull Icon getIcon() {
-        return (getUserObject().isPrimaryKey() ? pkColumnIcon : columnIcon);
+    public void setData(@NotNull OmitInfo omitInfo) {
+
     }
 
-    public @Override void setUserObject(Object userObject) {
-        if(userObject instanceof DBColumn) super.setUserObject(userObject);
-        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBColumn.class.getName()));
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
     }
 }

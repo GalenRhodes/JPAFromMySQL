@@ -49,20 +49,7 @@ public final class Utils {
     }
 
     public static void clearPassword(char[] pw) {
-        if(pw != null) {
-            Arrays.fill(pw, ' ');
-            Arrays.fill(pw, 'N');
-            Arrays.fill(pw, 'O');
-            Arrays.fill(pw, ' ');
-            Arrays.fill(pw, 'N');
-            Arrays.fill(pw, 'O');
-            Arrays.fill(pw, ' ');
-            Arrays.fill(pw, 'N');
-            Arrays.fill(pw, 'O');
-            Arrays.fill(pw, ' ');
-            Arrays.fill(pw, 'N');
-            Arrays.fill(pw, 'O');
-        }
+        if(pw != null) for(int i = 0; i < 1000; i++) Arrays.fill(pw, (char)(Math.random() * Character.MAX_VALUE));
     }
 
     public static @NotNull File getCurrentDirectory() {

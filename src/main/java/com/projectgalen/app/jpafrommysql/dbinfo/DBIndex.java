@@ -2,7 +2,7 @@ package com.projectgalen.app.jpafrommysql.dbinfo;
 
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: Index.java
+//    FILENAME: DBIndex.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
 //        DATE: October 25, 2023
@@ -32,23 +32,23 @@ import java.util.stream.Collectors;
 import static java.util.Optional.ofNullable;
 
 @SuppressWarnings("unused")
-public class Index {
+public class DBIndex {
 
-    private final boolean      nonUnique;
-    private final String       keyName;
-    private final String       collation;
-    private final BigInteger   cardinality;
-    private final BigInteger   subPart;
-    private final String       packed;
-    private final boolean      isNull;
-    private final String       indexType;
-    private final String       comment;
-    private final String       indexComment;
-    private final boolean      visible;
-    private final String       expression;
-    private final List<Column> columns = new ArrayList<>();
+    private final boolean        nonUnique;
+    private final String         keyName;
+    private final String         collation;
+    private final BigInteger     cardinality;
+    private final BigInteger     subPart;
+    private final String         packed;
+    private final boolean        isNull;
+    private final String         indexType;
+    private final String         comment;
+    private final String         indexComment;
+    private final boolean        visible;
+    private final String         expression;
+    private final List<DBColumn> columns = new ArrayList<>();
 
-    public Index(@NotNull Table table, @NotNull ResultSet rs) throws SQLException {
+    public DBIndex(@NotNull DBTable table, @NotNull ResultSet rs) throws SQLException {
         nonUnique    = (rs.getLong("Non_unique") == 1);
         keyName      = rs.getString("Key_name");
         collation    = rs.getString("Collation");
@@ -63,7 +63,7 @@ public class Index {
         expression   = rs.getString("Expression");
     }
 
-    public void addColumn(@NotNull Column column) {
+    public void addColumn(@NotNull DBColumn column) {
         columns.add(column);
     }
 
@@ -75,7 +75,7 @@ public class Index {
         return collation;
     }
 
-    public List<Column> getColumns() {
+    public List<DBColumn> getColumns() {
         return Collections.unmodifiableList(columns);
     }
 
@@ -120,6 +120,6 @@ public class Index {
     }
 
     public @Override String toString() {
-        return "%s: (%s)".formatted(keyName, columns.stream().map(Column::getColumnName).collect(Collectors.joining("`, `", "`", "`")));
+        return "%s: (%s)".formatted(keyName, columns.stream().map(DBColumn::getColumnName).collect(Collectors.joining("`, `", "`", "`")));
     }
 }

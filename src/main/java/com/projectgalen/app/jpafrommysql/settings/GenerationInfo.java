@@ -21,22 +21,26 @@ package com.projectgalen.app.jpafrommysql.settings;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GenerationInfo {
-    private @JsonProperty("outputPath")      String  outputPath;
-    private @JsonProperty("basePackage")     String  basePackage;
-    private @JsonProperty("baseClassPrefix") String  baseClassPrefix;
-    private @JsonProperty("baseClassSuffix") String  baseClassSuffix;
-    private @JsonProperty("splitEntities")   boolean splitEntities;
-    private @JsonProperty("subclassPackage") String  subclassPackage;
-    private @JsonProperty("subclassPrefix")  String  subclassPrefix;
-    private @JsonProperty("subclassSuffix")  String  subclassSuffix;
-    private @JsonProperty("fkPrefix")        String  fkPrefix;
-    private @JsonProperty("fkSuffix")        String  fkSuffix;
-    private @JsonProperty("fkToOnePattern")  String  fkToOnePattern;
-    private @JsonProperty("fkToManyPattern") String  fkToManyPattern;
+    private @JsonProperty("outputPath")      String         outputPath;
+    private @JsonProperty("basePackage")     String         basePackage;
+    private @JsonProperty("baseClassPrefix") String         baseClassPrefix;
+    private @JsonProperty("baseClassSuffix") String         baseClassSuffix;
+    private @JsonProperty("splitEntities")   boolean        splitEntities;
+    private @JsonProperty("subclassPackage") String         subclassPackage;
+    private @JsonProperty("subclassPrefix")  String         subclassPrefix;
+    private @JsonProperty("subclassSuffix")  String         subclassSuffix;
+    private @JsonProperty("fkPrefix")        String         fkPrefix;
+    private @JsonProperty("fkSuffix")        String         fkSuffix;
+    private @JsonProperty("fkToOnePattern")  String         fkToOnePattern;
+    private @JsonProperty("fkToManyPattern") String         fkToManyPattern;
+    private @JsonProperty("omitted")         List<OmitInfo> omitted = new ArrayList<>();
 
     public GenerationInfo() { }
 
@@ -100,6 +104,10 @@ public class GenerationInfo {
         return fkToOnePattern;
     }
 
+    public List<OmitInfo> getOmitted() {
+        return Collections.unmodifiableList(omitted);
+    }
+
     public String getOutputPath() {
         return outputPath;
     }
@@ -161,6 +169,10 @@ public class GenerationInfo {
 
     public void setFkToOnePattern(String fkToOnePattern) {
         this.fkToOnePattern = fkToOnePattern;
+    }
+
+    public void setOmitted(List<OmitInfo> omitted) {
+        this.omitted = new ArrayList<>(omitted);
     }
 
     public void setOutputPath(String outputPath) {

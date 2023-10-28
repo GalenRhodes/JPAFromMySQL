@@ -2,7 +2,7 @@ package com.projectgalen.app.jpafrommysql.dbinfo;
 
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: Column.java
+//    FILENAME: DBColumn.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
 //        DATE: October 25, 2023
@@ -29,32 +29,34 @@ import java.util.List;
 import java.util.Optional;
 
 @SuppressWarnings("unused")
-public class Column {
+public class DBColumn {
 
-    private final Table        table;
-    private final String       columnName;
-    private final Long         ordinalPosition;
-    private final String       columnDefault;
-    private final boolean      isNullable;
-    private final String       dataType;
-    private final Long         characterMaximumLength;
-    private final Long         characterOctetLength;
-    private final Long         numericPrecision;
-    private final Long         numericScale;
-    private final Long         datetimePrecision;
-    private final String       characterSetName;
-    private final String       columnType;
-    private final String       columnKey;
-    private final String       extra;
-    private final String       privileges;
-    private final String       columnComment;
-    private final String       generationExpression;
-    private final Long         srsId;
-    private final List<Index>  indexes       = new ArrayList<>();
-    private final List<Column> toManyColumns = new ArrayList<>();
-    private       Column       toOneColumn   = null;
+    private final DBTable        table;
+    private final String         columnName;
+    private final Long           ordinalPosition;
+    private final String         columnDefault;
+    private final boolean        isNullable;
+    private final String         dataType;
+    private final Long           characterMaximumLength;
+    private final Long           characterOctetLength;
+    private final Long           numericPrecision;
+    private final Long           numericScale;
+    private final Long           datetimePrecision;
+    private final String         characterSetName;
+    private final String         columnType;
+    private final String         columnKey;
+    private final String         extra;
+    private final String         privileges;
+    private final String         columnComment;
+    private final String         generationExpression;
+    private final Long           srsId;
+    private final List<DBIndex>  indexes             = new ArrayList<>();
+    private final List<DBColumn> toManyColumns       = new ArrayList<>();
+    private       DBColumn       toOneColumn         = null;
+    private       String         generatedColumnName = null;
+    private       boolean        omitted             = false;
 
-    public Column(@NotNull Table table, @NotNull ResultSet rs) throws SQLException {
+    public DBColumn(@NotNull DBTable table, @NotNull ResultSet rs) throws SQLException {
         this.table             = table;
         columnName             = rs.getString("COLUMN_NAME");
         ordinalPosition        = Utils.getLong(rs, "ORDINAL_POSITION");
@@ -76,12 +78,12 @@ public class Column {
         srsId                  = Utils.getLong(rs, "SRS_ID");
     }
 
-    public void addIndex(@NotNull Index index) {
+    public void addIndex(@NotNull DBIndex index) {
         indexes.add(index);
         index.addColumn(this);
     }
 
-    public void addToManyColumn(@NotNull Column column) {
+    public void addToManyColumn(@NotNull DBColumn column) {
         toManyColumns.add(column);
     }
 
@@ -129,11 +131,15 @@ public class Column {
         return extra;
     }
 
+    public String getGeneratedColumnName() {
+        return generatedColumnName;
+    }
+
     public String getGenerationExpression() {
         return generationExpression;
     }
 
-    public List<Index> getIndexes() {
+    public List<DBIndex> getIndexes() {
         return Collections.unmodifiableList(indexes);
     }
 
@@ -157,20 +163,24 @@ public class Column {
         return srsId;
     }
 
-    public Table getTable() {
+    public DBTable getTable() {
         return table;
     }
 
-    public List<Column> getToManyColumns() {
+    public List<DBColumn> getToManyColumns() {
         return Collections.unmodifiableList(toManyColumns);
     }
 
-    public Column getToOneColumn() {
+    public DBColumn getToOneColumn() {
         return toOneColumn;
     }
 
     public boolean isNullable() {
         return isNullable;
+    }
+
+    public boolean isOmitted() {
+        return omitted;
     }
 
     public boolean isPrimaryKey() {
@@ -181,7 +191,15 @@ public class Column {
         return (isPrimaryKey() && (table.getPrimaryKeyColumnCount() == 1));
     }
 
-    public void setToOneColumn(Column toOneColumn) {
+    public void setGeneratedColumnName(String generatedColumnName) {
+        this.generatedColumnName = generatedColumnName;
+    }
+
+    public void setOmitted(boolean omitted) {
+        this.omitted = omitted;
+    }
+
+    public void setToOneColumn(DBColumn toOneColumn) {
         this.toOneColumn = toOneColumn;
     }
 

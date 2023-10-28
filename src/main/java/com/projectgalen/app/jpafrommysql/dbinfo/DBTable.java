@@ -2,7 +2,7 @@ package com.projectgalen.app.jpafrommysql.dbinfo;
 
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: Table.java
+//    FILENAME: DBTable.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
 //        DATE: October 25, 2023
@@ -28,37 +28,39 @@ import java.sql.Timestamp;
 import java.util.*;
 
 @SuppressWarnings("unused")
-public class Table {
+public class DBTable {
 
-    private final String              tableCatalog;
-    private final String              tableSchema;
-    private final String              tableName;
-    private final String              tableType;
-    private final String              engine;
-    private final Long                version;
-    private final String              rowFormat;
-    private final Long                tableRows;
-    private final Long                avgRowLength;
-    private final Long                dataLength;
-    private final Long                maxDataLength;
-    private final Long                indexLength;
-    private final Long                dataFree;
-    private final Long                autoIncrement;
-    private final Timestamp           createTime;
-    private final Timestamp           updateTime;
-    private final Timestamp           checkTime;
-    private final String              tableCollation;
-    private final String              checksum;
-    private final String              createOptions;
-    private final String              tableComment;
-    private final Map<String, Column> columns                = new LinkedHashMap<>();
-    private final Map<String, Index>  indexes                = new TreeMap<>();
-    private       List<Column>        primaryKeyColumns      = null;
-    private       int                 primaryKeyColumnCount  = -1;
-    private final List<ForeignKey>    referencedForeignKeys  = new ArrayList<>();
-    private final List<ForeignKey>    referencingForeignKeys = new ArrayList<>();
+    private final String                tableCatalog;
+    private final String                tableSchema;
+    private final String                tableName;
+    private final String                tableType;
+    private final String                engine;
+    private final Long                  version;
+    private final String                rowFormat;
+    private final Long                  tableRows;
+    private final Long                  avgRowLength;
+    private final Long                  dataLength;
+    private final Long                  maxDataLength;
+    private final Long                  indexLength;
+    private final Long                  dataFree;
+    private final Long                  autoIncrement;
+    private final Timestamp             createTime;
+    private final Timestamp             updateTime;
+    private final Timestamp             checkTime;
+    private final String                tableCollation;
+    private final String                checksum;
+    private final String                createOptions;
+    private final String                tableComment;
+    private final Map<String, DBColumn> columns                = new LinkedHashMap<>();
+    private final Map<String, DBIndex>  indexes                = new TreeMap<>();
+    private       List<DBColumn>        primaryKeyColumns      = null;
+    private       int                   primaryKeyColumnCount  = -1;
+    private final List<DBForeignKey>    referencedForeignKeys  = new ArrayList<>();
+    private final List<DBForeignKey>    referencingForeignKeys = new ArrayList<>();
+    private       String                generatedTableName     = null;
+    private       boolean               omitted                = false;
 
-    public Table(@NotNull ResultSet rs) throws SQLException {
+    public DBTable(@NotNull ResultSet rs) throws SQLException {
         tableCatalog   = rs.getString("TABLE_CATALOG");
         tableSchema    = rs.getString("TABLE_SCHEMA");
         tableName      = rs.getString("TABLE_NAME");
@@ -83,22 +85,22 @@ public class Table {
     }
 
     public void addColumns(@NotNull ResultSet rs) throws SQLException {
-        while(rs.next()) columns.put(rs.getString("COLUMN_NAME"), new Column(this, rs));
+        while(rs.next()) columns.put(rs.getString("COLUMN_NAME"), new DBColumn(this, rs));
     }
 
     public void addIndexes(@NotNull ResultSet rs) throws SQLException {
         while(rs.next()) {
-            Column column = columns.get(rs.getString("Column_name"));
-            Index  index  = indexes.computeIfAbsent(rs.getString("Key_name"), k -> getIndex(rs));
+            DBColumn column = columns.get(rs.getString("Column_name"));
+            DBIndex  index  = indexes.computeIfAbsent(rs.getString("Key_name"), k -> getIndex(rs));
             if((column != null) && (index != null)) column.addIndex(index);
         }
     }
 
-    public void addReferencedForeignKey(@NotNull ForeignKey key) {
+    public void addReferencedForeignKey(@NotNull DBForeignKey key) {
         referencedForeignKeys.add(key);
     }
 
-    public void addReferencingForeignKey(@NotNull ForeignKey key) {
+    public void addReferencingForeignKey(@NotNull DBForeignKey key) {
         referencingForeignKeys.add(key);
     }
 
@@ -118,11 +120,11 @@ public class Table {
         return checksum;
     }
 
-    public Column getColumn(@NotNull String name) {
+    public DBColumn getColumn(@NotNull String name) {
         return columns.get(name);
     }
 
-    public List<Column> getColumns() {
+    public List<DBColumn> getColumns() {
         return columns.values().stream().toList();
     }
 
@@ -146,11 +148,15 @@ public class Table {
         return engine;
     }
 
+    public String getGeneratedTableName() {
+        return generatedTableName;
+    }
+
     public Long getIndexLength() {
         return indexLength;
     }
 
-    public List<Index> getIndexes() {
+    public List<DBIndex> getIndexes() {
         return indexes.values().stream().toList();
     }
 
@@ -162,15 +168,15 @@ public class Table {
         return ((primaryKeyColumnCount < 0) ? ((primaryKeyColumnCount = getPrimaryKeyColumns().size())) : primaryKeyColumnCount);
     }
 
-    public List<Column> getPrimaryKeyColumns() {
-        return ((primaryKeyColumns == null) ? (primaryKeyColumns = columns.values().stream().filter(Column::isPrimaryKey).toList()) : primaryKeyColumns);
+    public List<DBColumn> getPrimaryKeyColumns() {
+        return ((primaryKeyColumns == null) ? (primaryKeyColumns = columns.values().stream().filter(DBColumn::isPrimaryKey).toList()) : primaryKeyColumns);
     }
 
-    public List<ForeignKey> getReferencedForeignKeys() {
+    public List<DBForeignKey> getReferencedForeignKeys() {
         return Collections.unmodifiableList(referencedForeignKeys);
     }
 
-    public List<ForeignKey> getReferencingForeignKeys() {
+    public List<DBForeignKey> getReferencingForeignKeys() {
         return Collections.unmodifiableList(referencingForeignKeys);
     }
 
@@ -218,11 +224,23 @@ public class Table {
         return "InnoDB".equals(engine);
     }
 
+    public boolean isOmitted() {
+        return omitted;
+    }
+
+    public void setGeneratedTableName(String generatedTableName) {
+        this.generatedTableName = generatedTableName;
+    }
+
+    public void setOmitted(boolean omitted) {
+        this.omitted = omitted;
+    }
+
     public @Override String toString() {
         return tableName;
     }
 
-    private @Nullable Index getIndex(@NotNull ResultSet rs) {
-        try { return new Index(this, rs); } catch(SQLException ignore) { return null; }
+    private @Nullable DBIndex getIndex(@NotNull ResultSet rs) {
+        try { return new DBIndex(this, rs); } catch(SQLException ignore) { return null; }
     }
 }

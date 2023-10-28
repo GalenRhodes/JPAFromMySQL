@@ -17,13 +17,13 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import com.projectgalen.app.jpafrommysql.dbinfo.Table;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBTable;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public class TableTreeNode extends DatabaseTreeNode<Table> {
-    public TableTreeNode(@NotNull Table userObject) {
+public class TableTreeNode extends DatabaseTreeNode<DBTable> {
+    public TableTreeNode(@NotNull DBTable userObject) {
         super(userObject, true);
     }
 
@@ -32,7 +32,7 @@ public class TableTreeNode extends DatabaseTreeNode<Table> {
     }
 
     public @Override void setUserObject(Object userObject) {
-        if(userObject instanceof Table) super.setUserObject(userObject);
-        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(Table.class.getName()));
+        if(userObject instanceof DBTable) super.setUserObject(userObject);
+        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBTable.class.getName()));
     }
 }

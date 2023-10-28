@@ -19,7 +19,9 @@ package com.projectgalen.app.jpafrommysql.settings;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.projectgalen.app.jpafrommysql.settings.FieldReference.FieldInfo;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBColumn;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBTable;
+import com.projectgalen.app.jpafrommysql.settings.ColumnReference.FullColumnName;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -30,28 +32,36 @@ import java.util.stream.Stream;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OmitInfo {
-    protected @JsonProperty("tables") Set<TableReference> tables = new TreeSet<>();
-    protected @JsonProperty("fields") Set<FieldReference> fields = new TreeSet<>();
+    protected @JsonProperty("tables")  Set<TableReference>  tables  = new TreeSet<>();
+    protected @JsonProperty("columns") Set<ColumnReference> columns = new TreeSet<>();
 
     public OmitInfo() { }
 
-    public OmitInfo(Set<TableReference> tables, Set<FieldReference> fields) {
-        this.tables = tables;
-        this.fields = fields;
+    public OmitInfo(Set<TableReference> tables, Set<ColumnReference> columns) {
+        this.tables  = tables;
+        this.columns = columns;
     }
 
     public @Override boolean equals(Object o) {
         if(this == o) return true;
         if(!(o instanceof OmitInfo omitInfo)) return false;
-        return Objects.equals(tables, omitInfo.tables) && Objects.equals(fields, omitInfo.fields);
+        return Objects.equals(tables, omitInfo.tables) && Objects.equals(columns, omitInfo.columns);
     }
 
-    public Set<FieldReference> getFields() {
-        return Collections.unmodifiableSet(fields);
+    public Set<ColumnReference> getColumns() {
+        return Collections.unmodifiableSet(columns);
     }
 
     public Set<TableReference> getTables() {
         return Collections.unmodifiableSet(tables);
+    }
+
+    public boolean has(@NotNull DBTable table) {
+        return tables.stream().anyMatch(t -> t.matches(table));
+    }
+
+    public boolean has(@NotNull DBColumn column) {
+        return columns.stream().anyMatch(c -> c.matches(column));
     }
 
     public boolean has(@NotNull String schema, @NotNull String table) {
@@ -59,24 +69,24 @@ public class OmitInfo {
     }
 
     public boolean has(@NotNull String schema, @NotNull String table, @NotNull String field) {
-        return fields.stream().anyMatch(f -> f.matches(schema, table, field));
+        return columns.stream().anyMatch(f -> f.matches(schema, table, field));
     }
 
     public @Override int hashCode() {
-        return Objects.hash(tables, fields);
+        return Objects.hash(tables, columns);
     }
 
-    public void setFields(Set<FieldReference> fields) {
-        this.fields = new TreeSet<>(fields);
+    public void setColumns(Set<ColumnReference> columns) {
+        this.columns = new TreeSet<>(columns);
     }
 
     public void setTables(Set<TableReference> tables) {
         this.tables = new TreeSet<>(tables);
     }
 
-    public @NotNull Stream<FieldInfo> streamFields() {
-        Stream<FieldInfo> bigStream = Stream.empty();
-        for(FieldReference field : fields) bigStream = Stream.concat(bigStream, field.stream());
+    public @NotNull Stream<FullColumnName> streamFields() {
+        Stream<FullColumnName> bigStream = Stream.empty();
+        for(ColumnReference field : columns) bigStream = Stream.concat(bigStream, field.stream());
         return bigStream;
     }
 
