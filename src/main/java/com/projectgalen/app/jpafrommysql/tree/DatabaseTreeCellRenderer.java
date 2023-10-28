@@ -17,6 +17,7 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
+import com.projectgalen.app.jpafrommysql.tree.nodes.DatabaseTreeNode;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -46,7 +47,7 @@ public final class DatabaseTreeCellRenderer extends DefaultTreeCellRenderer {
         Object o = node.getUserObject();
 
         if(o instanceof String str) {
-            if(node.isRoot()) renderer.setIcon(DatabaseTreeNode.rootIcon);
+            if(node.isRoot()) renderer.setIcon(DatabaseTreeNode.serverIcon);
             else if(node.getLevel() == 1) renderer.setIcon(DatabaseTreeNode.schemaIcon);
             else renderer.setIcon(switch(str) {
                     case "Columns", "Indexes", "Foreign Keys" -> DatabaseTreeNode.folderIcon;

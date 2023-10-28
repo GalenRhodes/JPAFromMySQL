@@ -1,10 +1,10 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: DatabaseTreeSelectionModel.java
+//    FILENAME: JPASQLException.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
-//        DATE: October 27, 2023
+//        DATE: October 28, 2023
 //
 // Copyright © 2023 Project Galen. All rights reserved.
 //
@@ -17,10 +17,21 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import javax.swing.tree.DefaultTreeSelectionModel;
-
-public class DatabaseTreeSelectionModel extends DefaultTreeSelectionModel {
-    public DatabaseTreeSelectionModel() {
+@SuppressWarnings("unused")
+public class JPASQLException extends RuntimeException {
+    public JPASQLException() {
         super();
+    }
+
+    public JPASQLException(String message) {
+        super(message);
+    }
+
+    public JPASQLException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public JPASQLException(Throwable cause) {
+        super(cause);
     }
 }

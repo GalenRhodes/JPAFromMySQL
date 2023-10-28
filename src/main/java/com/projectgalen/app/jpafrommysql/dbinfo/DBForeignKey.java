@@ -29,16 +29,16 @@ import static java.util.Optional.ofNullable;
 @SuppressWarnings("unused")
 public class DBForeignKey {
 
-    private final String         constraintName;
-    private final String         tableName;
-    private final String         columnName;
-    private final String         referencedTableName;
-    private final String         referencedColumnName;
-    private final long           ordinalPosition;
-    private final long           positionInUniqueConstraint;
-    private final DBColumn       column;
-    private final DBColumn       referencedColumn;
-    private final ForeignKeyType type;
+    protected final String         constraintName;
+    protected final String         tableName;
+    protected final String         columnName;
+    protected final String         referencedTableName;
+    protected final String         referencedColumnName;
+    protected final long           ordinalPosition;
+    protected final long           positionInUniqueConstraint;
+    protected final DBColumn       column;
+    protected final DBColumn       referencedColumn;
+    protected final ForeignKeyType type;
 
     public DBForeignKey(@NotNull Map<String, DBTable> tables, @NotNull ResultSet rs) throws SQLException {
         constraintName             = rs.getString("CONSTRAINT_NAME");

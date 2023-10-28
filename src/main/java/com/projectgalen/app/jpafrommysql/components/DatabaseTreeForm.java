@@ -17,16 +17,57 @@ package com.projectgalen.app.jpafrommysql.components;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
+import com.projectgalen.app.jpafrommysql.dbinfo.DBServer;
+import com.projectgalen.app.jpafrommysql.tree.DatabaseTreeCellRenderer;
+import com.projectgalen.app.jpafrommysql.tree.models.DatabaseTreeModel;
+import com.projectgalen.app.jpafrommysql.tree.nodes.DatabaseTreeNode;
+import com.projectgalen.app.jpafrommysql.tree.nodes.ServerTreeNode;
+import com.projectgalen.app.jpafrommysql.tree.nodes.StringTreeNode;
+import org.jetbrains.annotations.NotNull;
+
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 
 public class DatabaseTreeForm {
-    protected JPanel  rootComponent;
-    protected JButton reloadInfoButton;
-    protected JTree   tablesTree;
+    public static final StringTreeNode DEFAULT_TOP_NODE = new StringTreeNode("<-N/A->", DatabaseTreeNode.unknownIcon, false);
 
-    public DatabaseTreeForm() { }
+    protected JPanel                 rootComponent;
+    protected JButton                reloadInfoButton;
+    protected JTree                  tablesTree;
+    protected DefaultMutableTreeNode topNode = DEFAULT_TOP_NODE;
 
-    public void setData() {
+    public DatabaseTreeForm() {
+        tablesTree.setModel(new DefaultTreeModel(topNode));
+        tablesTree.setCellRenderer(new DatabaseTreeCellRenderer());
+    }
 
+    public void addActionListener(@NotNull ActionListener l) {
+        reloadInfoButton.addActionListener(l);
+    }
+
+    public void addMouseListener(@NotNull MouseListener l) {
+        tablesTree.addMouseListener(l);
+    }
+
+    public void removeActionListener(@NotNull ActionListener l) {
+        reloadInfoButton.removeActionListener(l);
+    }
+
+    public void removeMouseListener(@NotNull MouseListener l) {
+        tablesTree.removeMouseListener(l);
+    }
+
+    public void setData(DBServer dbServer) {
+        if(dbServer != null) {
+            tablesTree.setModel(new DatabaseTreeModel(topNode = new ServerTreeNode(dbServer)));
+            SwingUtilities.invokeLater(() -> tablesTree.expandRow(1));
+        }
+        else {
+            tablesTree.setModel(new DefaultTreeModel(topNode = DEFAULT_TOP_NODE, false));
+        }
+        tablesTree.setCellRenderer(new DatabaseTreeCellRenderer());
     }
 }

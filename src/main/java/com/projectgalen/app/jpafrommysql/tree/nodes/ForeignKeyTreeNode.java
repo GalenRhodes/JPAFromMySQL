@@ -1,7 +1,7 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql.tree.nodes;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: TableTreeNode.java
+//    FILENAME: ForeignKeyTreeNode.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
 //        DATE: October 27, 2023
@@ -17,22 +17,22 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import com.projectgalen.app.jpafrommysql.dbinfo.DBTable;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBForeignKey;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public class TableTreeNode extends DatabaseTreeNode<DBTable> {
-    public TableTreeNode(@NotNull DBTable userObject) {
-        super(userObject, true);
+public class ForeignKeyTreeNode extends DatabaseTreeNode<DBForeignKey> {
+    public ForeignKeyTreeNode(@NotNull DBForeignKey userObject) {
+        super(userObject, false);
     }
 
     public @Override @NotNull Icon getIcon() {
-        return tableIcon;
+        return fkIcon;
     }
 
     public @Override void setUserObject(Object userObject) {
-        if(userObject instanceof DBTable) super.setUserObject(userObject);
-        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBTable.class.getName()));
+        if(userObject instanceof DBForeignKey) super.setUserObject(userObject);
+        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBForeignKey.class.getName()));
     }
 }

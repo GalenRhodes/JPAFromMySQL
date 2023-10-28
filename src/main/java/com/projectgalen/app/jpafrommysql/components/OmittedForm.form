@@ -16,7 +16,7 @@
         <properties/>
         <border type="line" title="Omitted Tables"/>
         <children>
-          <scrollpane id="f4b9b" class="com.projectgalen.lib.ui.components.table.PGJTable" binding="omittedTablesTable" custom-create="true">
+          <scrollpane id="f4b9b" class="com.projectgalen.lib.ui.components.table.PGJTable" binding="omittedTablesTable">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -70,7 +70,7 @@
         <properties/>
         <border type="line" title="Omitted Columns"/>
         <children>
-          <scrollpane id="79d1f" class="com.projectgalen.lib.ui.components.table.PGJTable" binding="omittedFieldsTable" custom-create="true">
+          <scrollpane id="79d1f" class="com.projectgalen.lib.ui.components.table.PGJTable" binding="omittedFieldsTable">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>

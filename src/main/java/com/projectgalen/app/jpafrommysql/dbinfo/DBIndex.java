@@ -34,19 +34,19 @@ import static java.util.Optional.ofNullable;
 @SuppressWarnings("unused")
 public class DBIndex {
 
-    private final boolean        nonUnique;
-    private final String         keyName;
-    private final String         collation;
-    private final BigInteger     cardinality;
-    private final BigInteger     subPart;
-    private final String         packed;
-    private final boolean        isNull;
-    private final String         indexType;
-    private final String         comment;
-    private final String         indexComment;
-    private final boolean        visible;
-    private final String         expression;
-    private final List<DBColumn> columns = new ArrayList<>();
+    protected final boolean        nonUnique;
+    protected final String         keyName;
+    protected final String         collation;
+    protected final BigInteger     cardinality;
+    protected final BigInteger     subPart;
+    protected final String         packed;
+    protected final boolean        isNull;
+    protected final String         indexType;
+    protected final String         comment;
+    protected final String         indexComment;
+    protected final boolean        visible;
+    protected final String         expression;
+    protected final List<DBColumn> columns = new ArrayList<>();
 
     public DBIndex(@NotNull DBTable table, @NotNull ResultSet rs) throws SQLException {
         nonUnique    = (rs.getLong("Non_unique") == 1);

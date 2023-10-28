@@ -1,10 +1,10 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql.tree.nodes;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: DatabaseTreeModel.java
+//    FILENAME: ServerTreeNode.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
-//        DATE: October 27, 2023
+//        DATE: October 28, 2023
 //
 // Copyright © 2023 Project Galen. All rights reserved.
 //
@@ -17,10 +17,23 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import javax.swing.tree.DefaultTreeModel;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBServer;
+import org.jetbrains.annotations.NotNull;
 
-public class DatabaseTreeModel extends DefaultTreeModel {
-    public DatabaseTreeModel(DatabaseTreeNode<?> root) {
-        super(root, true);
+import javax.swing.*;
+
+public class ServerTreeNode extends DatabaseTreeNode<DBServer> {
+    public ServerTreeNode(@NotNull DBServer server) {
+        super(server, true);
+        server.getSchemas().values().stream().map(SchemaTreeNode::new).forEach(this::add);
+    }
+
+    @Override public @NotNull Icon getIcon() {
+        return serverIcon;
+    }
+
+    public @Override void setUserObject(Object userObject) {
+        if(userObject instanceof DBServer) super.setUserObject(userObject);
+        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBServer.class.getName()));
     }
 }

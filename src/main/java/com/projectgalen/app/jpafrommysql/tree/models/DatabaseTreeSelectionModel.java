@@ -1,7 +1,7 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql.tree.models;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: StringTreeNode.java
+//    FILENAME: DatabaseTreeSelectionModel.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
 //        DATE: October 27, 2023
@@ -17,32 +17,10 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import org.jetbrains.annotations.NotNull;
+import javax.swing.tree.DefaultTreeSelectionModel;
 
-import javax.swing.*;
-
-public class StringTreeNode extends DatabaseTreeNode<String> {
-    private @NotNull Icon icon;
-
-    public StringTreeNode(@NotNull String text, @NotNull Icon icon, boolean allowsChildren) {
-        super(text, allowsChildren);
-        this.icon = icon;
-    }
-
-    public StringTreeNode(@NotNull String text, @NotNull Icon icon) {
-        this(text, icon, true);
-    }
-
-    public @Override @NotNull Icon getIcon()  { return icon; }
-
-    public @NotNull String getText()          { return getUserObject(); }
-
-    public void setIcon(@NotNull Icon icon)   { this.icon = icon; }
-
-    public void setText(@NotNull String text) { super.setUserObject(text); }
-
-    public @Override void setUserObject(Object userObject) {
-        if(userObject instanceof String text) setText(text);
-        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(String.class.getName()));
+public class DatabaseTreeSelectionModel extends DefaultTreeSelectionModel {
+    public DatabaseTreeSelectionModel() {
+        super();
     }
 }

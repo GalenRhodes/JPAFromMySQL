@@ -19,28 +19,45 @@ package com.projectgalen.app.jpafrommysql.dbinfo;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
 
+import static com.projectgalen.app.jpafrommysql.JPAFromMySQL.sql;
+import static com.projectgalen.app.jpafrommysql.SQL.*;
+import static com.projectgalen.app.jpafrommysql.Utils.setStmtString;
+
+@SuppressWarnings({ "UnusedReturnValue", "unused" })
 public class DBSchema {
 
-    protected final String schemaName;
+    protected final String               schemaName;
+    protected final DBServer             server;
+    protected final Map<String, DBTable> tables = new TreeMap<>();
 
-    protected @NotNull Map<String, DBTable> tables = Collections.emptyMap();
-
-    public DBSchema(String schemaName) {
+    public DBSchema(@NotNull DBServer server, @NotNull String schemaName) {
         this.schemaName = schemaName;
+        this.server = server;
     }
 
-    public String getSchemaName() {
-        return schemaName;
+    public String getSchemaName()                    { return schemaName; }
+
+    public @NotNull Map<String, DBTable> getTables() { return Collections.unmodifiableMap(tables); }
+
+    public @Override String toString()               { return "%s - [%,d tables]".formatted(schemaName, tables.size()); }
+
+    protected void load() {
+        doWithDatabase(server.getHostName(), server.getPort(), getSchemaName(), server.getUsername(), server.getPassword(), conn -> {
+            tables.clear();
+            doWithPrepStmt(conn, sql.getProperty("fetch.tables"), stmt -> forEachRow(setStmtString(stmt, 1, getSchemaName()), this::loadTable));
+            doWithPrepStmt(conn, sql.getProperty("fetch.columns"), stmt -> tables.values().forEach(table -> table.load(setStmtString(stmt, 1, schemaName))));
+            tables.forEach((name, table) -> doWithPrepStmt(conn, sql.format("fetch.indexes", getSchemaName(), name), table::addIndexes));
+            doWithPrepStmt(conn, sql.getProperty("fetch.foreign_keys"), stmt -> forEachRow(setStmtString(stmt, 1, getSchemaName()), this::loadForeignKey));
+        });
     }
 
-    public @NotNull Map<String, DBTable> getTables() {
-        return Collections.unmodifiableMap(tables);
-    }
+    private @NotNull DBForeignKey loadForeignKey(ResultSet rs) throws SQLException { return new DBForeignKey(tables, rs); }
 
-    @Override public String toString() {
-        return "%s - [%,d tables]".formatted(schemaName, tables.size());
-    }
+    private void loadTable(@NotNull ResultSet rs) throws SQLException              { tables.put(rs.getString("TABLE_NAME"), new DBTable(this, rs)); }
 }

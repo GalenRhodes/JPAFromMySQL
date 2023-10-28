@@ -1,7 +1,7 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql.tree.nodes;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
-//    FILENAME: IndexTreeNode.java
+//    FILENAME: ColumnTreeNode.java
 //         IDE: IntelliJ IDEA
 //      AUTHOR: Galen Rhodes
 //        DATE: October 27, 2023
@@ -17,22 +17,22 @@ package com.projectgalen.app.jpafrommysql.tree;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
-import com.projectgalen.app.jpafrommysql.dbinfo.DBIndex;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBColumn;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public class IndexTreeNode extends DatabaseTreeNode<DBIndex> {
-    public IndexTreeNode(@NotNull DBIndex userObject) {
+public class ColumnTreeNode extends DatabaseTreeNode<DBColumn> {
+    public ColumnTreeNode(@NotNull DBColumn userObject) {
         super(userObject, false);
     }
 
     public @Override @NotNull Icon getIcon() {
-        return indexIcon;
+        return (getUserObject().isPrimaryKey() ? pkColumnIcon : columnIcon);
     }
 
     public @Override void setUserObject(Object userObject) {
-        if(userObject instanceof DBIndex) super.setUserObject(userObject);
-        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBIndex.class.getName()));
+        if(userObject instanceof DBColumn) super.setUserObject(userObject);
+        else throw new IllegalArgumentException("User Object must an instance of %s.".formatted(DBColumn.class.getName()));
     }
 }

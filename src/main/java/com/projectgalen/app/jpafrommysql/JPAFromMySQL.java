@@ -19,13 +19,12 @@ package com.projectgalen.app.jpafrommysql;
 // ================================================================================================================================
 
 import com.formdev.flatlaf.util.SystemInfo;
+import com.projectgalen.app.jpafrommysql.components.DatabaseTreeForm;
 import com.projectgalen.app.jpafrommysql.components.OmittedForm;
-import com.projectgalen.app.jpafrommysql.dbinfo.DBForeignKey;
-import com.projectgalen.app.jpafrommysql.dbinfo.DBTable;
+import com.projectgalen.app.jpafrommysql.dbinfo.DBServer;
 import com.projectgalen.app.jpafrommysql.settings.GenerationInfo;
 import com.projectgalen.app.jpafrommysql.settings.ServerInfo;
 import com.projectgalen.app.jpafrommysql.settings.Settings;
-import com.projectgalen.app.jpafrommysql.tree.*;
 import com.projectgalen.lib.ui.Fonts;
 import com.projectgalen.lib.ui.UI;
 import com.projectgalen.lib.ui.menus.PGJMenu;
@@ -39,15 +38,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultTreeModel;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import static com.projectgalen.app.jpafrommysql.Utils.abbreviatePath;
@@ -61,54 +56,51 @@ public class JPAFromMySQL extends JFrame {
     public static final PGProperties     props                 = PGProperties.getXMLProperties("settings.xml", JPAFromMySQL.class);
     public static final PGProperties     sql                   = PGProperties.getXMLProperties("sql.xml", JPAFromMySQL.class);
     public static final PGResourceBundle msgs                  = PGResourceBundle.getPGBundle("com.projectgalen.app.jpafrommysql.messages");
-    public static final StringTreeNode   DEFAULT_TOP_NODE      = new StringTreeNode("<-N/A->", DatabaseTreeNode.unknownIcon, false);
 
     private static JPAFromMySQL app;
 
-    protected          JPanel               contentPane;
-    protected          JButton              buttonGenerate;
-    protected          JButton              saveButton;
-    protected          JButton              savePathLookupButton;
-    protected          JButton              outputPathLookupButton;
-    protected          JButton              reloadInfoButton;
-    protected          JCheckBox            splitEntitiesIntoBaseCheckBox;
-    protected          JCheckBox            saveValuesForLaterCheckBox;
-    protected final    JMenuBar             menuBar;
-    protected          JPasswordField       mySqlPasswordField;
-    protected          JTextField           mySqlHostnameField;
-    protected          JTextField           mySqlPortField;
-    protected          JTextField           mySqlSchemaField;
-    protected          JTextField           mySqlUsernameField;
-    protected          JTextField           projectField;
-    protected          JTextField           authorField;
-    protected          JTextField           organizationField;
-    protected          JTextField           basePackageField;
-    protected          JTextField           baseClassPrefixField;
-    protected          JTextField           baseClassSuffixField;
-    protected          JTextField           subClassPackageField;
-    protected          JTextField           subClassPrefixField;
-    protected          JTextField           subClassSuffixField;
-    protected          JTextField           fkPrefixField;
-    protected          JTextField           fkSuffixField;
-    protected          JTextField           fkToManyFieldPatternField;
-    protected          JTextField           fkToOneFieldPatternField;
-    protected          JTextField           savePathField;
-    protected          JTextField           outputPathField;
-    protected          JTree                tablesTree;
-    protected          JButton              openButton;
-    protected          JTabbedPane          tabbedPane;
-    protected          JButton              newFileButton;
-    protected          JLabel               subClassPackageLabel;
-    protected          JLabel               subClassPrefixLabel;
-    protected          JLabel               subClassSuffixLabel;
-    protected          JLabel               basePackageLabel;
-    protected          JLabel               baseClassPrefixLabel;
-    protected          JLabel               baseClassSuffixLabel;
-    protected          OmittedForm          omittedForm;
-    protected          JPopupMenu           popupMenu;
-    protected @NotNull Map<String, DBTable> tableList  = Collections.emptyMap();
-    protected          StringTreeNode       topNode    = DEFAULT_TOP_NODE;
-    protected          boolean              hasChanges = false;
+    protected       JPanel           contentPane;
+    protected       JButton          buttonGenerate;
+    protected       JButton          saveButton;
+    protected       JButton          savePathLookupButton;
+    protected       JButton          outputPathLookupButton;
+    protected       JCheckBox        splitEntitiesIntoBaseCheckBox;
+    protected       JCheckBox        saveValuesForLaterCheckBox;
+    protected final JMenuBar         menuBar;
+    protected       JPasswordField   mySqlPasswordField;
+    protected       JTextField       mySqlHostnameField;
+    protected       JTextField       mySqlPortField;
+    protected       JTextField       mySqlSchemaField;
+    protected       JTextField       mySqlUsernameField;
+    protected       JTextField       projectField;
+    protected       JTextField       authorField;
+    protected       JTextField       organizationField;
+    protected       JTextField       basePackageField;
+    protected       JTextField       baseClassPrefixField;
+    protected       JTextField       baseClassSuffixField;
+    protected       JTextField       subClassPackageField;
+    protected       JTextField       subClassPrefixField;
+    protected       JTextField       subClassSuffixField;
+    protected       JTextField       fkPrefixField;
+    protected       JTextField       fkSuffixField;
+    protected       JTextField       fkToManyFieldPatternField;
+    protected       JTextField       fkToOneFieldPatternField;
+    protected       JTextField       savePathField;
+    protected       JTextField       outputPathField;
+    protected       JButton          openButton;
+    protected       JTabbedPane      tabbedPane;
+    protected       JButton          newFileButton;
+    protected       JLabel           subClassPackageLabel;
+    protected       JLabel           subClassPrefixLabel;
+    protected       JLabel           subClassSuffixLabel;
+    protected       JLabel           basePackageLabel;
+    protected       JLabel           baseClassPrefixLabel;
+    protected       JLabel           baseClassSuffixLabel;
+    protected       OmittedForm      omittedForm;
+    protected       DatabaseTreeForm treeList;
+    protected       JPopupMenu       popupMenu;
+    protected       DBServer         dbServer   = null;
+    protected       boolean          hasChanges = false;
 
     protected Settings settings = new Settings(false);
 
@@ -126,12 +118,21 @@ public class JPAFromMySQL extends JFrame {
         openButton.addActionListener(e -> openSettings());
         saveButton.addActionListener(e -> saveSettings());
         newFileButton.addActionListener(e -> createNewSettings());
-        reloadInfoButton.addActionListener(e -> reloadDatabaseInfo(false, true));
         savePathLookupButton.addActionListener(e -> savePathField.setText(getFromFileDialog(this, msgs.getString("title.save_path_file_dialog"), savePathField.getText(), true)));
         outputPathLookupButton.addActionListener(e -> outputPathField.setText(getFromFileDialog(this, msgs.getString("title.output_path_file_dialog"), outputPathField.getText(), false)));
-        tablesTree.setModel(new DefaultTreeModel(topNode));
-        tablesTree.setCellRenderer(new DatabaseTreeCellRenderer());
         mySqlPortField.addFocusListener(new PortFocusListener());
+        treeList.addActionListener(e -> reloadDatabaseInfo(false, true));
+        treeList.addMouseListener(new MouseAdapter() {
+            public @Override void mousePressed(@NotNull MouseEvent e) { popupHandler(e); }
+
+            public @Override void mouseReleased(@NotNull MouseEvent e) { popupHandler(e); }
+
+            private void popupHandler(@NotNull MouseEvent e) {
+                if(e.isPopupTrigger()) {
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
 
         addChangeListeners();
 
@@ -147,18 +148,6 @@ public class JPAFromMySQL extends JFrame {
                                      new PGJMenuItem("Convert...", e -> { }),
                                      new PGJMenuItem("Assign Default Value...", e -> { }));
 
-        tablesTree.addMouseListener(new MouseAdapter() {
-            public @Override void mousePressed(@NotNull MouseEvent e) { popupHandler(e); }
-
-            public @Override void mouseReleased(@NotNull MouseEvent e) { popupHandler(e); }
-
-            private void popupHandler(@NotNull MouseEvent e) {
-                if(e.isPopupTrigger()) {
-                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                }
-            }
-        });
-
         Fonts.adjustFontSizes(this, 2.0f);
         pack();
         setResizable(true);
@@ -169,10 +158,7 @@ public class JPAFromMySQL extends JFrame {
 
     public void updateGeneratedNamesBasedOnSettings() {
         GenerationInfo genInfo = settings.getGenerationInfo();
-
-        tableList.values().forEach(table -> {
-            table.setOmitted(genInfo.getOmitted().stream().anyMatch(o -> o.has(table)));
-        });
+        dbServer.getSchemas().values().forEach(schema -> schema.getTables().values().forEach(table -> table.setOmitted(genInfo.getOmitted().stream().anyMatch(o -> o.has(table)))));
     }
 
     private void addChangeListeners() {
@@ -309,35 +295,9 @@ public class JPAFromMySQL extends JFrame {
     }
 
     private void populateTree() {
-        ServerInfo si         = settings.getServerInfo();
-        String     schemaName = si.getSchemaName();
-
-        topNode = new StringTreeNode("%s@%s:%d/%s".formatted(si.getUsername(), si.getHostName(), si.getPortNumber(), schemaName), DatabaseTreeNode.rootIcon);
-        StringTreeNode schemaNode = new StringTreeNode(schemaName, DatabaseTreeNode.schemaIcon);
-        topNode.add(schemaNode);
-
-        tableList.values().forEach(table -> {
-            TableTreeNode tableNode = new TableTreeNode(table);
-            schemaNode.add(tableNode);
-
-            StringTreeNode columnListNode = new StringTreeNode("Columns", DatabaseTreeNode.folderIcon);
-            StringTreeNode indexListNode  = new StringTreeNode("Indexes", DatabaseTreeNode.folderIcon);
-            StringTreeNode fkListNode     = new StringTreeNode("Foreign Keys", DatabaseTreeNode.folderIcon);
-
-            tableNode.add(columnListNode);
-            tableNode.add(indexListNode);
-            tableNode.add(fkListNode);
-
-            table.getColumns().forEach(c -> columnListNode.add(new ColumnTreeNode(c)));
-            table.getIndexes().forEach(index -> indexListNode.add(new IndexTreeNode(index)));
-            table.getReferencedForeignKeys().forEach(fk -> fkListNode.add(new ForeignKeyTreeNode(fk)));
-        });
-
-        tablesTree.setModel(new DatabaseTreeModel(topNode));
-        tablesTree.setCellRenderer(new DatabaseTreeCellRenderer());
+        treeList.setData(dbServer);
         revalidate();
         pack();
-        SwingUtilities.invokeLater(() -> tablesTree.expandRow(1));
     }
 
     private void processCmdLine(String @NotNull [] args) {
@@ -351,44 +311,18 @@ public class JPAFromMySQL extends JFrame {
     }
 
     private void reloadDatabaseInfo(boolean suppressErrorDialog, boolean copyFieldsToSettings) {
-        if(copyFieldsToSettings) copyFieldsToSettings();
-        ServerInfo si         = settings.getServerInfo();
-        String     schemaName = si.getSchemaName();
+        try {
+            if(copyFieldsToSettings) copyFieldsToSettings();
 
-        tableList = Objects.requireNonNullElseGet(si.getFromDatabase(suppressErrorDialog, conn -> {
-            Map<String, DBTable> list = si.getFromPrepStmt(conn, sql.getProperty("fetch.tables"), suppressErrorDialog, stmt -> {
-                Map<String, DBTable> tables = new TreeMap<>();
-                stmt.setString(1, schemaName);
-                si.forEachRow(stmt, rs -> {
-                    DBTable table = new DBTable(rs);
-                    tables.put(table.getTableName(), table);
-                });
-                return tables;
-            });
+            dbServer = new DBServer(settings.getServerInfo());
+            dbServer.loadSchema(settings.getServerInfo().getSchemaName());
 
-            if((list == null) || list.isEmpty()) return null;
-
-            si.doWithPrepStmt(conn, sql.getProperty("fetch.columns"), suppressErrorDialog, stmt -> {
-                stmt.setString(1, schemaName);
-                for(DBTable table : list.values()) {
-                    stmt.setString(2, table.getTableName());
-                    table.addColumns(stmt.executeQuery());
-                }
-            });
-
-            for(DBTable table : list.values()) {
-                si.doWithPrepStmt(conn, sql.format("fetch.indexes", schemaName, table.getTableName()), suppressErrorDialog, stmt -> si.forEachRow(stmt, table::addIndexes));
-            }
-
-            si.doWithPrepStmt(conn, sql.getProperty("fetch.foreign_keys"), suppressErrorDialog, stmt -> {
-                stmt.setString(1, schemaName);
-                si.forEachRow(stmt, rs -> new DBForeignKey(list, rs));
-            });
-
-            return list;
-        }), Collections::emptyMap);
-
-        populateTree();
+            populateTree();
+        }
+        catch(JPASQLException e) {
+            if(suppressErrorDialog) e.printStackTrace(System.err);
+            else JOptionPane.showMessageDialog(this, e, "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void saveSettings() {
@@ -418,7 +352,6 @@ public class JPAFromMySQL extends JFrame {
         else {
             this.settings = new Settings(false);
             copySettingsToFields(Objects.requireNonNullElse(filename, "Config.json"));
-            tablesTree.setModel(new DefaultTreeModel(topNode = DEFAULT_TOP_NODE, false));
             revalidate();
             pack();
         }

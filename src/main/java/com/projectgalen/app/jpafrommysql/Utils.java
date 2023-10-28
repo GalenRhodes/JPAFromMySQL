@@ -30,6 +30,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -98,6 +99,16 @@ public final class Utils {
 
     public static @NotNull String removePrefix(@NotNull String string, @NotNull String prefix) {
         return string.startsWith(prefix) ? string.substring(prefix.length()) : string;
+    }
+
+    public static @NotNull PreparedStatement setStmtString(@NotNull PreparedStatement stmt, int index, String string) {
+        try {
+            stmt.setString(index, string);
+            return stmt;
+        }
+        catch(SQLException e) {
+            throw new JPASQLException(e);
+        }
     }
 
     public static @NotNull String unabbreviatePath(@NotNull String path) {

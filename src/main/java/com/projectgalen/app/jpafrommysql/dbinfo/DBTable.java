@@ -18,51 +18,55 @@ package com.projectgalen.app.jpafrommysql.dbinfo;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
+import com.projectgalen.app.jpafrommysql.JPASQLException;
 import com.projectgalen.app.jpafrommysql.Utils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 
+import static com.projectgalen.app.jpafrommysql.SQL.forEachRow;
+import static com.projectgalen.app.jpafrommysql.Utils.setStmtString;
+
 @SuppressWarnings("unused")
 public class DBTable {
 
-    private final String                tableCatalog;
-    private final String                tableSchema;
-    private final String                tableName;
-    private final String                tableType;
-    private final String                engine;
-    private final Long                  version;
-    private final String                rowFormat;
-    private final Long                  tableRows;
-    private final Long                  avgRowLength;
-    private final Long                  dataLength;
-    private final Long                  maxDataLength;
-    private final Long                  indexLength;
-    private final Long                  dataFree;
-    private final Long                  autoIncrement;
-    private final Timestamp             createTime;
-    private final Timestamp             updateTime;
-    private final Timestamp             checkTime;
-    private final String                tableCollation;
-    private final String                checksum;
-    private final String                createOptions;
-    private final String                tableComment;
-    private final Map<String, DBColumn> columns                = new LinkedHashMap<>();
-    private final Map<String, DBIndex>  indexes                = new TreeMap<>();
-    private       List<DBColumn>        primaryKeyColumns      = null;
-    private       int                   primaryKeyColumnCount  = -1;
-    private final List<DBForeignKey>    referencedForeignKeys  = new ArrayList<>();
-    private final List<DBForeignKey>    referencingForeignKeys = new ArrayList<>();
-    private       String                generatedTableName     = null;
-    private       boolean               omitted                = false;
+    protected final DBSchema              schema;
+    protected final String                tableCatalog;
+    protected final String                tableName;
+    protected final String                tableType;
+    protected final String                engine;
+    protected final Long                  version;
+    protected final String                rowFormat;
+    protected final Long                  tableRows;
+    protected final Long                  avgRowLength;
+    protected final Long                  dataLength;
+    protected final Long                  maxDataLength;
+    protected final Long                  indexLength;
+    protected final Long                  dataFree;
+    protected final Long                  autoIncrement;
+    protected final Timestamp             createTime;
+    protected final Timestamp             updateTime;
+    protected final Timestamp             checkTime;
+    protected final String                tableCollation;
+    protected final String                checksum;
+    protected final String                createOptions;
+    protected final String                tableComment;
+    protected final Map<String, DBColumn> columns                = new LinkedHashMap<>();
+    protected final Map<String, DBIndex>  indexes                = new TreeMap<>();
+    protected final List<DBColumn>        primaryKeyColumns      = new ArrayList<>();
+    protected final List<DBForeignKey>    referencedForeignKeys  = new ArrayList<>();
+    protected final List<DBForeignKey>    referencingForeignKeys = new ArrayList<>();
 
-    public DBTable(@NotNull ResultSet rs) throws SQLException {
+    protected String  generatedTableName = null;
+    protected boolean omitted            = false;
+
+    public DBTable(@NotNull DBSchema schema, @NotNull ResultSet rs) throws SQLException {
+        this.schema = schema;
         tableCatalog   = rs.getString("TABLE_CATALOG");
-        tableSchema    = rs.getString("TABLE_SCHEMA");
         tableName      = rs.getString("TABLE_NAME");
         tableType      = rs.getString("TABLE_TYPE");
         engine         = rs.getString("ENGINE");
@@ -82,18 +86,6 @@ public class DBTable {
         checksum       = rs.getString("CHECKSUM");
         createOptions  = rs.getString("CREATE_OPTIONS");
         tableComment   = rs.getString("TABLE_COMMENT");
-    }
-
-    public void addColumns(@NotNull ResultSet rs) throws SQLException {
-        while(rs.next()) columns.put(rs.getString("COLUMN_NAME"), new DBColumn(this, rs));
-    }
-
-    public void addIndexes(@NotNull ResultSet rs) throws SQLException {
-        while(rs.next()) {
-            DBColumn column = columns.get(rs.getString("Column_name"));
-            DBIndex  index  = indexes.computeIfAbsent(rs.getString("Key_name"), k -> getIndex(rs));
-            if((column != null) && (index != null)) column.addIndex(index);
-        }
     }
 
     public void addReferencedForeignKey(@NotNull DBForeignKey key) {
@@ -165,11 +157,11 @@ public class DBTable {
     }
 
     public int getPrimaryKeyColumnCount() {
-        return ((primaryKeyColumnCount < 0) ? ((primaryKeyColumnCount = getPrimaryKeyColumns().size())) : primaryKeyColumnCount);
+        return primaryKeyColumns.size();
     }
 
     public List<DBColumn> getPrimaryKeyColumns() {
-        return ((primaryKeyColumns == null) ? (primaryKeyColumns = columns.values().stream().filter(DBColumn::isPrimaryKey).toList()) : primaryKeyColumns);
+        return Collections.unmodifiableList(primaryKeyColumns);
     }
 
     public List<DBForeignKey> getReferencedForeignKeys() {
@@ -182,6 +174,10 @@ public class DBTable {
 
     public String getRowFormat() {
         return rowFormat;
+    }
+
+    public DBSchema getSchema() {
+        return schema;
     }
 
     public String getTableCatalog() {
@@ -205,7 +201,7 @@ public class DBTable {
     }
 
     public String getTableSchema() {
-        return tableSchema;
+        return schema.schemaName;
     }
 
     public String getTableType() {
@@ -240,7 +236,19 @@ public class DBTable {
         return tableName;
     }
 
-    private @Nullable DBIndex getIndex(@NotNull ResultSet rs) {
-        try { return new DBIndex(this, rs); } catch(SQLException ignore) { return null; }
+    protected void addIndexes(@NotNull PreparedStatement stmt) {
+        forEachRow(stmt, rs -> {
+            DBColumn column = columns.get(rs.getString("Column_name"));
+            DBIndex  index  = indexes.computeIfAbsent(rs.getString("Key_name"), k -> { try { return new DBIndex(this, rs); } catch(SQLException e) { throw new JPASQLException(e); } });
+            if(column != null) column.addIndex(index);
+        });
+    }
+
+    protected void load(@NotNull PreparedStatement stmt) {
+        forEachRow(setStmtString(stmt, 2, tableName), rs -> {
+            DBColumn column = new DBColumn(this, rs);
+            columns.put(column.getColumnName(), column);
+            if(column.isPrimaryKey()) primaryKeyColumns.add(column);
+        });
     }
 }

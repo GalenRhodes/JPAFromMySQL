@@ -1,4 +1,4 @@
-package com.projectgalen.app.jpafrommysql.tree;
+package com.projectgalen.app.jpafrommysql.tree.nodes;
 // ================================================================================================================================
 //     PROJECT: JPAFromMySQL
 //    FILENAME: DatabaseTreeNode.java
@@ -31,7 +31,7 @@ public class DatabaseTreeNode<T> extends DefaultMutableTreeNode {
     public static final Icon indexIcon    = UI.getIcon("icons/table_lightning.png", JPAFromMySQL.class);
     public static final Icon fkIcon       = UI.getIcon("icons/table_relationship.png", JPAFromMySQL.class);
     public static final Icon columnIcon   = UI.getIcon("icons/table_gear.png", JPAFromMySQL.class);
-    public static final Icon rootIcon     = UI.getIcon("icons/computer.png", JPAFromMySQL.class);
+    public static final Icon serverIcon   = UI.getIcon("icons/computer.png", JPAFromMySQL.class);
     public static final Icon schemaIcon   = UI.getIcon("icons/database.png", JPAFromMySQL.class);
     public static final Icon folderIcon   = UI.getIcon("icons/folder.png", JPAFromMySQL.class);
     public static final Icon unknownIcon  = UI.getIcon("icons/cog.png", JPAFromMySQL.class);

@@ -20,19 +20,10 @@ package com.projectgalen.app.jpafrommysql.settings;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.projectgalen.app.jpafrommysql.JPAFromMySQL;
-import com.projectgalen.lib.utils.delegates.ThrowingConsumer;
-import com.projectgalen.lib.utils.delegates.ThrowingFunction;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
-import java.sql.*;
 import java.util.Objects;
 
-import static com.projectgalen.app.jpafrommysql.JPAFromMySQL.props;
-
-@SuppressWarnings("SqlSourceToSinkFlow")
+@SuppressWarnings("unused")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ServerInfo {
     public static final int DEFAULT_MYSQL_PORT = 3306;
@@ -53,36 +44,6 @@ public class ServerInfo {
         password   = "";
     }
 
-    public void doWithDatabase(@NotNull ThrowingConsumer<Connection, SQLException> consumer) {
-        doWithDatabase(false, consumer);
-    }
-
-    public void doWithDatabase(boolean suppressErrorDialog, @NotNull ThrowingConsumer<Connection, SQLException> consumer) {
-        getFromDatabase(suppressErrorDialog, c -> {
-            consumer.accept(c);
-            return null;
-        });
-    }
-
-    public void doWithPrepStmt(@NotNull Connection conn, @NotNull String sql, @NotNull ThrowingConsumer<PreparedStatement, SQLException> consumer) throws SQLException {
-        doWithPrepStmt(conn, sql, false, consumer);
-    }
-
-    public void doWithPrepStmt(@NotNull Connection conn, @NotNull String sql, boolean suppressErrorDialog, @NotNull ThrowingConsumer<PreparedStatement, SQLException> consumer) throws SQLException {
-        getFromPrepStmt(conn, sql, s -> {
-            consumer.accept(s);
-            return null;
-        });
-    }
-
-    public void doWithPrepStmt(@NotNull String sql, @NotNull ThrowingConsumer<PreparedStatement, SQLException> consumer) {
-        doWithPrepStmt(sql, false, consumer);
-    }
-
-    public void doWithPrepStmt(@NotNull String sql, boolean suppressErrorDialog, @NotNull ThrowingConsumer<PreparedStatement, SQLException> consumer) {
-        doWithDatabase(conn -> doWithPrepStmt(conn, sql, suppressErrorDialog, consumer));
-    }
-
     public @Override boolean equals(Object o) {
         if(this == o) return true;
         if(!(o instanceof ServerInfo that)) return false;
@@ -91,51 +52,6 @@ public class ServerInfo {
                && Objects.equals(schemaName, that.schemaName)
                && Objects.equals(username, that.username)
                && Objects.equals(password, that.password);/*@f1*/
-    }
-
-    public void forEachRow(@NotNull PreparedStatement stmt, @NotNull ThrowingConsumer<ResultSet, SQLException> consumer) throws SQLException {
-        try(ResultSet rs = stmt.executeQuery()) { while(rs.next()) consumer.accept(rs); }
-    }
-
-    public <R> @Nullable R getFromDatabase(@NotNull ThrowingFunction<Connection, R, SQLException> func) {
-        return getFromDatabase(false, func);
-    }
-
-    public <R> @Nullable R getFromDatabase(boolean suppressErrorDialog, @NotNull ThrowingFunction<Connection, R, SQLException> func) {
-        try(Connection conn = DriverManager.getConnection(props.format("jdbc.url", getHostName(), getPortNumber(), getSchemaName()), getUsername(), getPassword())) {
-            return func.apply(conn);
-        }
-        catch(SQLException e) {
-            if(suppressErrorDialog) e.printStackTrace(System.err);
-            else JOptionPane.showMessageDialog(JPAFromMySQL.app(), e, "Database Error", JOptionPane.ERROR_MESSAGE);
-            return null;
-        }
-    }
-
-    public <R> @Nullable R getFromPrepStmt(@NotNull Connection conn, @NotNull String sql, @NotNull ThrowingFunction<PreparedStatement, R, SQLException> func) throws SQLException {
-        return getFromPrepStmt(conn, sql, false, func);
-    }
-
-    public <R> @Nullable R getFromPrepStmt(@NotNull Connection conn,
-                                           @NotNull String sql,
-                                           boolean suppressErrorDialog,
-                                           @NotNull ThrowingFunction<PreparedStatement, R, SQLException> func) throws SQLException {
-        try(PreparedStatement stmt = conn.prepareStatement(sql)) {
-            return func.apply(stmt);
-        }
-        catch(SQLException e) {
-            if(suppressErrorDialog) e.printStackTrace(System.err);
-            else JOptionPane.showMessageDialog(JPAFromMySQL.app(), e, "Database Error", JOptionPane.ERROR_MESSAGE);
-            return null;
-        }
-    }
-
-    public <R> @Nullable R getFromPrepStmt(@NotNull String sql, @NotNull ThrowingFunction<PreparedStatement, R, SQLException> func) {
-        return getFromPrepStmt(sql, false, func);
-    }
-
-    public <R> @Nullable R getFromPrepStmt(@NotNull String sql, boolean suppressErrorDialog, @NotNull ThrowingFunction<PreparedStatement, R, SQLException> func) {
-        return getFromDatabase(conn -> getFromPrepStmt(conn, sql, suppressErrorDialog, func));
     }
 
     public String getHostName() {

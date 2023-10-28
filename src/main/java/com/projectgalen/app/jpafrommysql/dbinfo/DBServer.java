@@ -17,8 +17,12 @@ package com.projectgalen.app.jpafrommysql.dbinfo;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
+import com.projectgalen.app.jpafrommysql.settings.ServerInfo;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class DBServer {
 
@@ -26,13 +30,13 @@ public class DBServer {
     protected final int                   port;
     protected final String                username;
     protected final String                password;
-    protected       Map<String, DBSchema> schemas = Collections.emptyMap();
+    protected       Map<String, DBSchema> schemas = new TreeMap<>();
 
-    public DBServer(String hostName, int port, String username, String password) {
-        this.hostName = hostName;
-        this.port     = port;
-        this.username = username;
-        this.password = password;
+    public DBServer(@NotNull ServerInfo serverInfo) {
+        this.hostName = serverInfo.getHostName();
+        this.port     = serverInfo.getPortNumber();
+        this.username = serverInfo.getUsername();
+        this.password = serverInfo.getPassword();
     }
 
     public String getHostName() {
@@ -53,5 +57,15 @@ public class DBServer {
 
     public String getUsername() {
         return username;
+    }
+
+    public void loadSchema(@NotNull String schemaName) {
+        DBSchema schema = new DBSchema(this, schemaName);
+        schema.load();
+        schemas.put(schemaName, schema);
+    }
+
+    public @Override String toString() {
+        return "jdbc:mysql://%s@%s:%d".formatted(username, hostName, port);
     }
 }
