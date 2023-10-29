@@ -61,12 +61,12 @@ public class DatabaseTreeForm {
     }
 
     public void setData(DBServer dbServer) {
-        if(dbServer != null) {
-            tablesTree.setModel(new DatabaseTreeModel(topNode = new ServerTreeNode(dbServer)));
-            SwingUtilities.invokeLater(() -> tablesTree.expandRow(1));
+        if(dbServer == null) {
+            tablesTree.setModel(new DefaultTreeModel(topNode = DEFAULT_TOP_NODE, false));
         }
         else {
-            tablesTree.setModel(new DefaultTreeModel(topNode = DEFAULT_TOP_NODE, false));
+            tablesTree.setModel(new DatabaseTreeModel(topNode = new ServerTreeNode(dbServer)));
+            SwingUtilities.invokeLater(() -> tablesTree.expandRow(1));
         }
         tablesTree.setCellRenderer(new DatabaseTreeCellRenderer());
     }

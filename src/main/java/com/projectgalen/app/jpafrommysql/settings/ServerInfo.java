@@ -18,15 +18,18 @@ package com.projectgalen.app.jpafrommysql.settings;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
+import static com.projectgalen.app.jpafrommysql.JPAFromMySQL.props;
+
 @SuppressWarnings("unused")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServerInfo {
-    public static final int DEFAULT_MYSQL_PORT = 3306;
 
     private @JsonProperty("hostName")   String hostName;
     private @JsonProperty("portNumber") int    portNumber;
@@ -38,7 +41,7 @@ public class ServerInfo {
 
     public ServerInfo(boolean dummy) {
         hostName   = "localhost";
-        portNumber = DEFAULT_MYSQL_PORT;
+        portNumber = props.getInt("jdbc.default.mysql.port");
         schemaName = "";
         username   = "";
         password   = "";

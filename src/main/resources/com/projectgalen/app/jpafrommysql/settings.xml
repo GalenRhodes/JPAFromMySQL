@@ -5,6 +5,11 @@
     <entry key="nothing"/>
     <!-- # -->
     <entry key="jdbc.url">jdbc:mysql://%s:%d/%s</entry>
+    <entry key="jdbc.default.mysql.port">3306</entry>
+    <!-- # -->
+    <entry key="app.settings.filename">.jpafromsql</entry>
+    <entry key="default.config.filename">./Config.json</entry>
+    <entry key="cmdline.flag.settings">--settings</entry>
     <!-- # -->
     <entry key="mysql.curr.ts.value">CURRENT_TIMESTAMP</entry>
     <!-- # -->

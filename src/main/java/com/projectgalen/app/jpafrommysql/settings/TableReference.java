@@ -18,6 +18,7 @@ package com.projectgalen.app.jpafrommysql.settings;
 // ================================================================================================================================
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.projectgalen.app.jpafrommysql.dbinfo.DBTable;
@@ -29,6 +30,7 @@ import java.util.regex.Pattern;
 import static com.projectgalen.app.jpafrommysql.Utils.getRegex;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TableReference implements Comparable<TableReference> {
     protected @JsonIgnore                                      Pattern schemaRegex = null;
     protected @JsonIgnore                                      Pattern tableRegex  = null;

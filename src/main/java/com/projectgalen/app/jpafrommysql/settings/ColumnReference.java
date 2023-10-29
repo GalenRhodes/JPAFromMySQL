@@ -18,6 +18,7 @@ package com.projectgalen.app.jpafrommysql.settings;
 // ================================================================================================================================
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.projectgalen.app.jpafrommysql.Utils;
@@ -32,6 +33,7 @@ import static com.projectgalen.app.jpafrommysql.Utils.getRegex;
 
 @SuppressWarnings("unused")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ColumnReference implements Comparable<ColumnReference> {
 
     protected @JsonIgnore                                      List<Pattern> columnRegex = null;

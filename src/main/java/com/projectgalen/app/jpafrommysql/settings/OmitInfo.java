@@ -17,6 +17,7 @@ package com.projectgalen.app.jpafrommysql.settings;
 // NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // ================================================================================================================================
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.projectgalen.app.jpafrommysql.dbinfo.DBColumn;
@@ -31,6 +32,7 @@ import java.util.TreeSet;
 import java.util.stream.Stream;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OmitInfo {
     protected @JsonProperty("tables")  Set<TableReference>  tables  = new TreeSet<>();
     protected @JsonProperty("columns") Set<ColumnReference> columns = new TreeSet<>();

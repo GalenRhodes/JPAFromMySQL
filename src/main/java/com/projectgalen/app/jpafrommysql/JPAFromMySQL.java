@@ -20,11 +20,12 @@ package com.projectgalen.app.jpafrommysql;
 
 import com.formdev.flatlaf.util.SystemInfo;
 import com.projectgalen.app.jpafrommysql.components.DatabaseTreeForm;
+import com.projectgalen.app.jpafrommysql.components.LeftHandColumn;
 import com.projectgalen.app.jpafrommysql.components.OmittedForm;
 import com.projectgalen.app.jpafrommysql.dbinfo.DBServer;
 import com.projectgalen.app.jpafrommysql.settings.GenerationInfo;
-import com.projectgalen.app.jpafrommysql.settings.ServerInfo;
 import com.projectgalen.app.jpafrommysql.settings.Settings;
+import com.projectgalen.app.jpafrommysql.settings.app.AppSettings;
 import com.projectgalen.lib.ui.Fonts;
 import com.projectgalen.lib.ui.UI;
 import com.projectgalen.lib.ui.menus.PGJMenu;
@@ -38,71 +39,45 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.Comparator;
 import java.util.Objects;
-import java.util.function.Supplier;
 
-import static com.projectgalen.app.jpafrommysql.Utils.abbreviatePath;
 import static com.projectgalen.app.jpafrommysql.Utils.getFromFileDialog;
 import static java.util.Optional.ofNullable;
 
 @SuppressWarnings({ "UnusedReturnValue", "unused" })
 public class JPAFromMySQL extends JFrame {
 
-    public static final String           SETTINGS_CMDLINE_FLAG = "--settings";
-    public static final PGProperties     props                 = PGProperties.getXMLProperties("settings.xml", JPAFromMySQL.class);
-    public static final PGProperties     sql                   = PGProperties.getXMLProperties("sql.xml", JPAFromMySQL.class);
-    public static final PGResourceBundle msgs                  = PGResourceBundle.getPGBundle("com.projectgalen.app.jpafrommysql.messages");
+    public static final PGResourceBundle msgs                    = PGResourceBundle.getPGBundle("com.projectgalen.app.jpafrommysql.messages");
+    public static final PGProperties     props                   = PGProperties.getXMLProperties("settings.xml", JPAFromMySQL.class);
+    public static final PGProperties     sql                     = PGProperties.getXMLProperties("sql.xml", JPAFromMySQL.class);
+    public static final String           DEFAULT_CONFIG_FILENAME = props.getProperty("default.config.filename").replace("/", File.separator);
+    public static final String           SETTINGS_CMDLINE_FLAG   = props.getProperty("cmdline.flag.settings");
 
     private static JPAFromMySQL app;
 
     protected       JPanel           contentPane;
     protected       JButton          buttonGenerate;
     protected       JButton          saveButton;
-    protected       JButton          savePathLookupButton;
-    protected       JButton          outputPathLookupButton;
-    protected       JCheckBox        splitEntitiesIntoBaseCheckBox;
-    protected       JCheckBox        saveValuesForLaterCheckBox;
-    protected final JMenuBar         menuBar;
-    protected       JPasswordField   mySqlPasswordField;
-    protected       JTextField       mySqlHostnameField;
-    protected       JTextField       mySqlPortField;
-    protected       JTextField       mySqlSchemaField;
-    protected       JTextField       mySqlUsernameField;
-    protected       JTextField       projectField;
-    protected       JTextField       authorField;
-    protected       JTextField       organizationField;
-    protected       JTextField       basePackageField;
-    protected       JTextField       baseClassPrefixField;
-    protected       JTextField       baseClassSuffixField;
-    protected       JTextField       subClassPackageField;
-    protected       JTextField       subClassPrefixField;
-    protected       JTextField       subClassSuffixField;
-    protected       JTextField       fkPrefixField;
-    protected       JTextField       fkSuffixField;
-    protected       JTextField       fkToManyFieldPatternField;
-    protected       JTextField       fkToOneFieldPatternField;
-    protected       JTextField       savePathField;
-    protected       JTextField       outputPathField;
     protected       JButton          openButton;
-    protected       JTabbedPane      tabbedPane;
     protected       JButton          newFileButton;
-    protected       JLabel           subClassPackageLabel;
-    protected       JLabel           subClassPrefixLabel;
-    protected       JLabel           subClassSuffixLabel;
-    protected       JLabel           basePackageLabel;
-    protected       JLabel           baseClassPrefixLabel;
-    protected       JLabel           baseClassSuffixLabel;
+    protected       JTabbedPane      tabbedPane;
     protected       OmittedForm      omittedForm;
     protected       DatabaseTreeForm treeList;
-    protected       JPopupMenu       popupMenu;
+    protected       LeftHandColumn   leftHandComponent;
+    protected final JMenuBar         menuBar;
+    protected final JPopupMenu       popupMenu;
     protected       DBServer         dbServer   = null;
     protected       boolean          hasChanges = false;
 
-    protected Settings settings = new Settings(false);
+    protected       Settings    settings = new Settings(false);
+    protected final AppSettings appSettings;
 
     public JPAFromMySQL() { this(new String[0]); }
 
@@ -111,6 +86,7 @@ public class JPAFromMySQL extends JFrame {
         app = this;
         setContentPane(contentPane);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        appSettings = AppSettings.load();
 
         processCmdLine(args);
 
@@ -118,9 +94,6 @@ public class JPAFromMySQL extends JFrame {
         openButton.addActionListener(e -> openSettings());
         saveButton.addActionListener(e -> saveSettings());
         newFileButton.addActionListener(e -> createNewSettings());
-        savePathLookupButton.addActionListener(e -> savePathField.setText(getFromFileDialog(this, msgs.getString("title.save_path_file_dialog"), savePathField.getText(), true)));
-        outputPathLookupButton.addActionListener(e -> outputPathField.setText(getFromFileDialog(this, msgs.getString("title.output_path_file_dialog"), outputPathField.getText(), false)));
-        mySqlPortField.addFocusListener(new PortFocusListener());
         treeList.addActionListener(e -> reloadDatabaseInfo(false, true));
         treeList.addMouseListener(new MouseAdapter() {
             public @Override void mousePressed(@NotNull MouseEvent e) { popupHandler(e); }
@@ -133,8 +106,7 @@ public class JPAFromMySQL extends JFrame {
                 }
             }
         });
-
-        addChangeListeners();
+        leftHandComponent.addChangeListeners(settings, this::setHasChanges);
 
         setJMenuBar(menuBar = new PGJMenuBar(new PGJMenu("File",
                                                          new PGJMenuItem("New...", UI.getIcon("icons/folder_add.png", JPAFromMySQL.class), e -> createNewSettings()),
@@ -152,8 +124,34 @@ public class JPAFromMySQL extends JFrame {
         pack();
         setResizable(true);
         setLocationRelativeTo(null);
+
+        Rectangle windowBounds = getBounds();
+
+        setMinimumSize(windowBounds.getSize());
+
+        if((appSettings.getWindowHeight() == 0) || (appSettings.getWindowWidth() == 0)) {
+            appSettings.setWindowBounds(windowBounds);
+            appSettings.save();
+        }
+        else {
+            setLocation(appSettings.getWindowLocation());
+            setSize(Math.max(windowBounds.width, appSettings.getWindowWidth()), Math.max(windowBounds.height, appSettings.getWindowHeight()));
+            appSettings.setWindowBounds(getBounds());
+            appSettings.save();
+        }
+
         setVisible(true);
-        setMinimumSize(getSize());
+        addComponentListener(new ComponentAdapter() {
+            public @Override void componentMoved(@NotNull ComponentEvent e) {
+                appSettings.setWindowBounds(getBounds());
+                appSettings.save();
+            }
+
+            public @Override void componentResized(@NotNull ComponentEvent e) {
+                appSettings.setWindowBounds(getBounds());
+                appSettings.save();
+            }
+        });
     }
 
     public void updateGeneratedNamesBasedOnSettings() {
@@ -161,98 +159,9 @@ public class JPAFromMySQL extends JFrame {
         dbServer.getSchemas().values().forEach(schema -> schema.getTables().values().forEach(table -> table.setOmitted(genInfo.getOmitted().stream().anyMatch(o -> o.has(table)))));
     }
 
-    private void addChangeListeners() {
-        mySqlHostnameField.addFocusListener(new TextFieldFocusListener(() -> settings.getServerInfo().getHostName()));
-        mySqlPortField.addFocusListener(new TextFieldFocusListener(() -> String.valueOf(settings.getServerInfo().getPortNumber())));
-        mySqlSchemaField.addFocusListener(new TextFieldFocusListener(() -> settings.getServerInfo().getSchemaName()));
-        mySqlUsernameField.addFocusListener(new TextFieldFocusListener(() -> settings.getServerInfo().getUsername()));
-        mySqlPasswordField.addFocusListener(new TextFieldFocusListener(() -> settings.getServerInfo().getPassword()));
-        projectField.addFocusListener(new TextFieldFocusListener(() -> settings.getProjectInfo().getProjectName()));
-        authorField.addFocusListener(new TextFieldFocusListener(() -> settings.getProjectInfo().getAuthor()));
-        organizationField.addFocusListener(new TextFieldFocusListener(() -> settings.getProjectInfo().getOrganization()));
-        basePackageField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getBasePackage()));
-        baseClassPrefixField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getBaseClassPrefix()));
-        baseClassSuffixField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getBaseClassSuffix()));
-        subClassPackageField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getSubclassPackage()));
-        subClassPrefixField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getSubclassPrefix()));
-        subClassSuffixField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getSubclassSuffix()));
-        fkPrefixField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getFkPrefix()));
-        fkSuffixField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getFkSuffix()));
-        fkToManyFieldPatternField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getFkToManyPattern()));
-        fkToOneFieldPatternField.addFocusListener(new TextFieldFocusListener(() -> settings.getGenerationInfo().getFkToOnePattern()));
-
-        outputPathField.addFocusListener(new TextFieldFocusListener(() -> abbreviatePath(settings.getGenerationInfo().getOutputPath())));
-        savePathField.addFocusListener(new TextFieldFocusListener(() -> abbreviatePath(settings.getSettingsSavePath())));
-
-        splitEntitiesIntoBaseCheckBox.addFocusListener(new CheckBoxFocusListener(() -> settings.getGenerationInfo().isSplitEntities()));
-        saveValuesForLaterCheckBox.addFocusListener(new CheckBoxFocusListener(() -> settings.isSaveSettings()));
-    }
-
     private void clearHasChanges() {
         hasChanges = false;
         saveButton.setEnabled(false);
-    }
-
-    private void copyFieldsToSettings() {
-        settings.getServerInfo().setPortNumber(Integer.parseInt(mySqlPortField.getText()));
-
-        char[] pw = mySqlPasswordField.getPassword();
-        settings.getServerInfo().setPassword(pw != null ? String.valueOf(pw) : "");
-        Utils.clearPassword(pw);
-
-        settings.getServerInfo().setHostName(mySqlHostnameField.getText());
-        settings.getServerInfo().setSchemaName(mySqlSchemaField.getText());
-        settings.getServerInfo().setUsername(mySqlUsernameField.getText());
-
-        settings.getProjectInfo().setProjectName(projectField.getText());
-        settings.getProjectInfo().setAuthor(authorField.getText());
-        settings.getProjectInfo().setOrganization(organizationField.getText());
-
-        settings.getGenerationInfo().setOutputPath(Utils.unabbreviatePath(outputPathField.getText()));
-        settings.getGenerationInfo().setSplitEntities(splitEntitiesIntoBaseCheckBox.isSelected());
-        settings.getGenerationInfo().setBasePackage(basePackageField.getText());
-        settings.getGenerationInfo().setBaseClassPrefix(baseClassPrefixField.getText());
-        settings.getGenerationInfo().setBaseClassSuffix(baseClassSuffixField.getText());
-        settings.getGenerationInfo().setSubclassPackage(subClassPackageField.getText());
-        settings.getGenerationInfo().setSubclassPrefix(subClassPrefixField.getText());
-        settings.getGenerationInfo().setSubclassSuffix(subClassSuffixField.getText());
-        settings.getGenerationInfo().setFkPrefix(fkPrefixField.getText());
-        settings.getGenerationInfo().setFkSuffix(fkSuffixField.getText());
-        settings.getGenerationInfo().setFkToOnePattern(fkToOneFieldPatternField.getText());
-        settings.getGenerationInfo().setFkToManyPattern(fkToManyFieldPatternField.getText());
-
-        settings.setSaveSettings(saveValuesForLaterCheckBox.isSelected());
-        settings.setSettingsSavePath(Utils.unabbreviatePath(savePathField.getText()));
-
-        if(saveValuesForLaterCheckBox.isSelected()) saveSettings();
-    }
-
-    private void copySettingsToFields(@NotNull String filename) {
-        mySqlHostnameField.setText(settings.getServerInfo().getHostName());
-        mySqlPortField.setText(String.valueOf(settings.getServerInfo().getPortNumber()));
-        mySqlSchemaField.setText(settings.getServerInfo().getSchemaName());
-        mySqlUsernameField.setText(settings.getServerInfo().getUsername());
-        mySqlPasswordField.setText(settings.getServerInfo().getPassword());
-
-        projectField.setText(settings.getProjectInfo().getProjectName());
-        authorField.setText(settings.getProjectInfo().getAuthor());
-        organizationField.setText(settings.getProjectInfo().getOrganization());
-
-        outputPathField.setText(abbreviatePath(settings.getGenerationInfo().getOutputPath()));
-        splitEntitiesIntoBaseCheckBox.setSelected(settings.getGenerationInfo().isSplitEntities());
-        basePackageField.setText(settings.getGenerationInfo().getBasePackage());
-        baseClassPrefixField.setText(settings.getGenerationInfo().getBaseClassPrefix());
-        baseClassSuffixField.setText(settings.getGenerationInfo().getBaseClassSuffix());
-        subClassPackageField.setText(settings.getGenerationInfo().getSubclassPackage());
-        subClassPrefixField.setText(settings.getGenerationInfo().getSubclassPrefix());
-        subClassSuffixField.setText(settings.getGenerationInfo().getSubclassSuffix());
-        fkPrefixField.setText(settings.getGenerationInfo().getFkPrefix());
-        fkSuffixField.setText(settings.getGenerationInfo().getFkSuffix());
-        fkToOneFieldPatternField.setText(settings.getGenerationInfo().getFkToOnePattern());
-        fkToManyFieldPatternField.setText(settings.getGenerationInfo().getFkToManyPattern());
-
-        saveValuesForLaterCheckBox.setSelected(settings.isSaveSettings());
-        savePathField.setText(abbreviatePath(filename));
     }
 
     private void createNewSettings() {
@@ -270,7 +179,7 @@ public class JPAFromMySQL extends JFrame {
 
     private void generateJPA() {
         try {
-            copyFieldsToSettings();
+            leftHandComponent.copyFieldsToSettings(settings);
             // TODO: Generate JPA POJOs...
         }
         catch(Exception e) {
@@ -296,8 +205,6 @@ public class JPAFromMySQL extends JFrame {
 
     private void populateTree() {
         treeList.setData(dbServer);
-        revalidate();
-        pack();
     }
 
     private void processCmdLine(String @NotNull [] args) {
@@ -312,17 +219,15 @@ public class JPAFromMySQL extends JFrame {
 
     private void reloadDatabaseInfo(boolean suppressErrorDialog, boolean copyFieldsToSettings) {
         try {
-            if(copyFieldsToSettings) copyFieldsToSettings();
-
-            dbServer = new DBServer(settings.getServerInfo());
-            dbServer.loadSchema(settings.getServerInfo().getSchemaName());
-
-            populateTree();
+            if(copyFieldsToSettings) leftHandComponent.copyFieldsToSettings(settings);
+            (dbServer = new DBServer(settings.getServerInfo())).loadSchema(settings.getServerInfo().getSchemaName());
         }
         catch(JPASQLException e) {
             if(suppressErrorDialog) e.printStackTrace(System.err);
             else JOptionPane.showMessageDialog(this, e, "Database Error", JOptionPane.ERROR_MESSAGE);
+            dbServer = null;
         }
+        populateTree();
     }
 
     private void saveSettings() {
@@ -344,17 +249,14 @@ public class JPAFromMySQL extends JFrame {
     }
 
     private void setSettings(@Nullable Settings settings, @Nullable String filename, boolean suppressErrorDialog) {
-        this.settings = settings;
-        if(this.settings != null) {
-            copySettingsToFields(Objects.requireNonNullElse(filename, "Config.json"));
+        if(settings != null) {
+            leftHandComponent.copySettingsToFields((this.settings = settings), Objects.requireNonNullElse(filename, DEFAULT_CONFIG_FILENAME));
             reloadDatabaseInfo(suppressErrorDialog, false);
         }
         else {
-            this.settings = new Settings(false);
-            copySettingsToFields(Objects.requireNonNullElse(filename, "Config.json"));
-            revalidate();
-            pack();
+            leftHandComponent.copySettingsToFields((this.settings = new Settings(false)), Objects.requireNonNullElse(filename, DEFAULT_CONFIG_FILENAME));
         }
+        leftHandComponent.addChangeListeners(this.settings, this::setHasChanges);
     }
 
     public static JPAFromMySQL app() {
@@ -367,6 +269,7 @@ public class JPAFromMySQL extends JFrame {
 
     public static void main(String[] args) {
         loadMySQLDriver();
+        System.getProperties().entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().toString())).forEach(e -> System.out.printf("%50s : \"%s\"\n", e.getKey(), e.getValue()));
         SwingUtilities.invokeLater(() -> new JPAFromMySQL(args));
     }
 
@@ -378,59 +281,6 @@ public class JPAFromMySQL extends JFrame {
             JOptionPane.showMessageDialog(null, msgs.format("msg.err.sql_driver_load_failed", e), msgs.getString("title.err.driver_error"), JOptionPane.WARNING_MESSAGE);
             e.printStackTrace(System.err);
             System.exit(1);
-        }
-    }
-
-    private final class CheckBoxFocusListener extends FocusAdapter {
-        private final Supplier<Boolean> supplier;
-
-        public CheckBoxFocusListener(@NotNull Supplier<Boolean> supplier) {
-            super();
-            this.supplier = supplier;
-        }
-
-        public @Override void focusLost(@NotNull FocusEvent e) {
-            if((e.getSource() instanceof JCheckBox checkBox) && (checkBox.isSelected() != ofNullable(supplier.get()).orElse(false))) setHasChanges();
-        }
-    }
-
-    private final class TextFieldFocusListener extends FocusAdapter {
-        private final Supplier<String> supplier;
-
-        public TextFieldFocusListener(@NotNull Supplier<String> supplier) {
-            super();
-            this.supplier = supplier;
-        }
-
-        public @Override void focusLost(@NotNull FocusEvent e) {
-            if(e.getSource() instanceof JPasswordField field) {
-                if(!String.valueOf(field.getPassword()).equals(supplier.get())) setHasChanges();
-            }
-            else if(e.getSource() instanceof JTextField field) {
-                if(!field.getText().equals(supplier.get())) setHasChanges();
-            }
-        }
-    }
-
-    private static final class PortFocusListener extends FocusAdapter {
-        public PortFocusListener() { }
-
-        public @Override void focusLost(@NotNull FocusEvent e) {
-            if(e.getComponent() instanceof JTextField field) {
-                try {
-                    String input = field.getText();
-                    if(input.isEmpty()) {
-                        field.setText(String.valueOf(ServerInfo.DEFAULT_MYSQL_PORT));
-                    }
-                    else {
-                        int p = Integer.parseInt(input);
-                        if(p <= 0 || p > 0xffff) field.setText(String.valueOf(ServerInfo.DEFAULT_MYSQL_PORT));
-                    }
-                }
-                catch(Exception ex) {
-                    field.setText(String.valueOf(ServerInfo.DEFAULT_MYSQL_PORT));
-                }
-            }
         }
     }
 
